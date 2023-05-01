@@ -200,27 +200,27 @@ def images_normalize_withGrayscale(frames:np.array, frame_num:int, height:int, w
     """
 
     # normalize the number of frames (assuming typically downsampling)
-    arFrames = frames_downsample(arFrames, frame_num)
+    frames = frames_downsample(frames, frame_num)
 
 	#Hamzah: convert to grayscale
-    arFrames = rgb_to_gray(arFrames, height, width)
+    frames = rgb_to_gray(frames, height, width)
 	
     # crop to centered image
-    arFrames = crop_images(arFrames, height, width)
+    frames = crop_images(frames, height, width)
 
     if rescale:
         # normalize to [-1.0, 1.0]
-        arFrames = normalise_images(arFrames)
-    elif np.max(np.abs(arFrames)) > 1.0: 
+        frames = normalise_images(frames)
+    elif np.max(np.abs(frames)) > 1.0: 
         warnings.warn("Images not normalized")
 
-    return arFrames
+    return frames
 
 def frames_show(frames:np.array, wait_milliseconds:int = 100):
 
-    nFrames, nHeight, nWidth, nDepth = frames.shape
+    frames_count, nHeight, nWidth, nDepth = frames.shape
     
-    for i in range(nFrames):
+    for i in range(frames_count):
         cv2.imshow("Frame", frames[i, :, :, :])
         cv2.waitKey(wait_milliseconds)
 
@@ -229,109 +229,109 @@ def frames_show(frames:np.array, wait_milliseconds:int = 100):
 def video_length(video_path:str) -> float:
     return int(check_output(['mediainfo', '--Inform=Video;%Duration%', video_path]))/1000.0
 
-def videosDir2framesDir(sVideoDir:str, sFrameDir:str, nFramesNorm:int = None, 
-    nResizeMinDim:int = None, tuCropShape:tuple = None, nClasses:int = None):
+def video_dir_to_frames_dir(video_dir:str, frame_dir:str, frames_norm:int = None, 
+    resize_min_dim:int = None, crop_shape:tuple = None, classes:int = None):
     """ Extract frames from videos 
     
     Input video structure:
-    ... sVideoDir / train / class001 / videoname.avi
+    ... video_dir / train / class001 / videoname.avi
     Output:
-    ... sFrameDir / train / class001 / videoname / frames.png
+    ... frame_dir / train / class001 / videoname / frames.png
     """
 
     # do not (partially) overwrite existing frame directory
-    #if os.path.exists(sFrameDir): 
-    #    warnings.warn("Frame folder " + sFrameDir + " already exists, frame extraction stopped")
+    #if os.path.exists(frame_dir): 
+    #    warnings.warn("Frame folder " + frame_dir + " already exists, frame extraction stopped")
     #    return 
 
-    # get videos. Assume sVideoDir / train / class / video.mp4
-    dfVideos = pd.DataFrame(sorted(glob.glob(sVideoDir + "/*/*/*.*")), columns=["sVideoPath"])
+    # get videos. Assume video_dir / train / class / video.mp4
+    videos_df = pd.DataFrame(sorted(glob.glob(video_dir + "/*/*/*.*")), columns=["video_path"])
     print("Located {} videos in {}, extracting to {} ..."\
-        .format(len(dfVideos), sVideoDir, sFrameDir))
-    if len(dfVideos) == 0: raise ValueError("No videos found")
+        .format(len(videos_df), video_dir, frame_dir))
+    if len(videos_df) == 0: raise ValueError("No videos found")
 
     # eventually restrict to first nLabels
-    if nClasses != None:
-        dfVideos.loc[:,"sLabel"] = dfVideos.sVideoPath.apply(lambda s: s.split("/")[-2])
-        liClasses = sorted(dfVideos.sLabel.unique())[:nClasses]
-        dfVideos = dfVideos[dfVideos["sLabel"].isin(liClasses)]
-        print("Using only {} videos from first {} classes".format(len(dfVideos), nClasses))
+    if classes != None:
+        videos_df.loc[:,"label"] = videos_df.video_path.apply(lambda s: s.split("/")[-2])
+        classes = sorted(videos_df.label.unique())[:classes]
+        videos_df = videos_df[videos_df["label"].isin(classes)]
+        print("Using only {} videos from first {} classes".format(len(videos_df), classes))
 
-    nCounter = 0
+    counter = 0
     # loop through all videos and extract frames
-    for sVideoPath in dfVideos.sVideoPath:
+    for video_path in videos_df.video_path:
 
         # assemble target diretory (assumed directories see above)
-        li_sVideoPath = sVideoPath.split("/")
-        if len(li_sVideoPath) < 4: raise ValueError("Video path should have min 4 components: {}".format(str(li_sVideoPath)))
-        sVideoName = li_sVideoPath[-1].split(".")[0]
-        sTargetDir = sFrameDir + "/" + li_sVideoPath[-3] + "/" + li_sVideoPath[-2] + "/" + sVideoName
+        li_video_path = video_path.split("/")
+        if len(li_video_path) < 4: raise ValueError("Video path should have min 4 components: {}".format(str(li_video_path)))
+        video_name = li_video_path[-1].split(".")[0]
+        target_dir = frame_dir + "/" + li_video_path[-3] + "/" + li_video_path[-2] + "/" + video_name
         
         # check if frames already extracted
-        if nFramesNorm != None and os.path.exists(sTargetDir):
-            nFrames = len(glob.glob(sTargetDir + "/*.*"))
-            if nFrames == nFramesNorm: 
-                print("Video %5d already extracted to %s" % (nCounter, sTargetDir))
-                nCounter += 1
+        if frames_norm != None and os.path.exists(target_dir):
+            frames_count = len(glob.glob(target_dir + "/*.*"))
+            if frames_count == frames_norm: 
+                print("Video %5d already extracted to %s" % (counter, target_dir))
+                counter += 1
                 continue
             else: 
-                print("Video %5d: Directory with %d instead of %d frames detected" % (nCounter, nFrames, nFramesNorm))
+                print("Video %5d: Directory with %d instead of %d frames detected" % (counter, frames_count, frames_norm))
         
         # create target directory
-        os.makedirs(sTargetDir, exist_ok = True)
+        os.makedirs(target_dir, exist_ok = True)
 
         # slice videos into frames with OpenCV
-        arFrames = video_to_frames(sVideoPath, nResizeMinDim)
+        frames = video_to_frames(video_path, resize_min_dim)
 
         # length and fps
-        fVideoSec = video_length(sVideoPath)
-        nFrames = len(arFrames)
-        fFPS = nFrames / fVideoSec   
+        video_sec = video_length(video_path)
+        frames_count = len(frames)
+        fps = frames_count / video_sec   
 
         # downsample
-        if nFramesNorm != None: 
-            arFrames = frames_downsample(arFrames, nFramesNorm)
+        if frames_norm != None: 
+            frames = frames_downsample(frames, frames_norm)
 
         # crop images
-        if tuCropShape != None:
-            arFrames = crop_images(arFrames, *tuCropShape)
+        if crop_shape != None:
+            frames = crop_images(frames, *crop_shape)
         
         # write frames to .png files
-        frames_to_files(arFrames, sTargetDir)         
+        frames_to_files(frames, target_dir)         
 
-        print("Video %5d | %5.1f sec | %d frames | %4.1f fps | saved %s in %s" % (nCounter, fVideoSec, nFrames, fFPS, str(arFrames.shape), sTargetDir))
-        nCounter += 1      
+        print("Video %5d | %5.1f sec | %d frames | %4.1f fps | saved %s in %s" % (counter, video_sec, frames_count, fps, str(frames.shape), target_dir))
+        counter += 1      
 
     return
 
 
-def unittest(sVideoDir, nSamples = 100):
-    print("\nAnalyze video durations and fps from %s ..." % (sVideoDir))
+def unittest(video_dir, nSamples = 100):
+    print("\nAnalyze video durations and fps from %s ..." % (video_dir))
     print(os.getcwd())
 
-    liVideos = glob.glob(sVideoDir + "/*/*.mp4") + glob.glob(sVideoDir + "/*/*.avi")
+    videos = glob.glob(video_dir + "/*/*.mp4") + glob.glob(video_dir + "/*/*.avi")
     
-    if len(liVideos) == 0: raise ValueError("No videos detected")
+    if len(videos) == 0: raise ValueError("No videos detected")
 
-    fVideoSec_sum, nFrames_sum = 0, 0
+    video_sec_sum, frames_count_sum = 0, 0
     for i in range(nSamples):
-        sVideoPath = random.choice(liVideos)
-        #print("Video %s" % sVideoPath)
+        video_path = random.choice(videos)
+        #print("Video %s" % video_path)
 
         # read video
-        arFrames = video_to_frames(sVideoPath, 256)
-        nFrames = len(arFrames)
+        frames = video_to_frames(video_path, 256)
+        frames_count = len(frames)
 
         # determine length of video in sec and deduce frame rate
-        fVideoSec = video_length(sVideoPath)
-        fFPS = nFrames / fVideoSec
+        video_sec = video_length(video_path)
+        fps = frames_count / video_sec
 
-        fVideoSec_sum += fVideoSec
-        nFrames_sum += nFrames
+        video_sec_sum += video_sec
+        frames_count_sum += frames_count
 
-        print("%2d: Shape %s, duration %.1f sec, fps %.1f" % (i, str(arFrames.shape), fVideoSec, fFPS))
+        print("%2d: Shape %s, duration %.1f sec, fps %.1f" % (i, str(frames.shape), video_sec, fps))
 
-    nCount = i+1
-    print("%d samples: Average video duration %.1f sec, fps %.1f" % (nSamples, fVideoSec_sum / nCount, nFrames_sum / fVideoSec_sum))
+    count = i+1
+    print("%d samples: Average video duration %.1f sec, fps %.1f" % (nSamples, video_sec_sum / count, frames_count_sum / video_sec_sum))
 
     return
