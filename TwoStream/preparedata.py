@@ -32,7 +32,7 @@ def start_pipeline(video_set, video_dir, feature, image_dir, image_feature_dir):
 # dataset
 video_set = {
     "name": "ELAR",
-    "classes": 40, # number of classes
+    "classes": 30, # number of classes
     "frames_norm": 18, # number of frames per video
     "min_dim": 224, # Smaller dimension of saved video frames
     "shape": (224, 224), # height, width
@@ -48,8 +48,8 @@ feature = {
     "output_shape": (1024, )
 }
 
-video_dir = './dataset/elar/videos/25/01' # path of video files
-image_dir = './dataset/elar/images/25/01' # path of image files
+video_dir = '../dataset/elar/videos/' # path of video files
+image_dir = '../dataset/elar/images/' # path of image files
 
 image_feature_dir = './dataset/elar/features/mobilenet_temp/25/images/01'
 
