@@ -19,7 +19,7 @@ import tensorflow as tf
 from keras.utils import np_utils
 
 
-from frame import files_to_frames, normalise_images, frames_show, images_normalize_withGrayscale
+from frame import files_to_frames, process_images, frames_show, images_normalize_withGrayscale
 
 class FramesGenerator(tf.keras.utils.Sequence):
     """
@@ -50,10 +50,10 @@ class FramesGenerator(tf.keras.utils.Sequence):
         if self._sample_count == 0:
             raise ValueError("Found no frame directories files in " + path)
         
-        print("Detected %d samples in $s ..." % (self._sample_count, path))
+        print("Detected %d samples in %s ..." % (self._sample_count, path))
 
         # extract (text) labels from path
-        labels = self._videos.frameFir.apply(lambda s: s.split("/")[-2])
+        labels = self._videos.frame_dir.apply(lambda s: os.path.normpath(s).split("\\")[-2])
         self._videos.loc[:, "label"] = labels
 
         # extract unique classes from all detected labels
@@ -112,7 +112,7 @@ class FramesGenerator(tf.keras.utils.Sequence):
 
         frames = frames[..., 0:self._channels]
 
-        frames = normalise_images(frames, self._frames, self._height, self._width, rescale = True)
+        frames = process_images(frames, self._frames, self._height, self._width, rescale = True)
 
         return frames, video.label
 

@@ -10,6 +10,7 @@ import glob
 import warnings
 import random
 from subprocess import check_output
+import re
 
 import numpy as np
 import pandas as pd
@@ -119,6 +120,7 @@ def frames_downsample(frames:np.array, frames_target:int) -> np.array:
     Adjust number of frames (eg 123) to frames_target (eg 79)
     works also if originally less frames then frames_target
     """
+    print(frames.shape, frames_target)
     sample_num, _, _, _ = frames.shape
     if sample_num == frames_target:
         return frames
@@ -227,6 +229,7 @@ def frames_show(frames:np.array, wait_milliseconds:int = 100):
     return
 
 def video_length(video_path:str) -> float:
+    print(video_path)
     return int(check_output(['mediainfo', '--Inform=Video;%Duration%', video_path]))/1000.0
 
 def video_dir_to_frames_dir(video_dir:str, frame_dir:str, frames_norm:int = None, 
@@ -262,7 +265,8 @@ def video_dir_to_frames_dir(video_dir:str, frame_dir:str, frames_norm:int = None
     for video_path in videos_df.video_path:
 
         # assemble target diretory (assumed directories see above)
-        li_video_path = video_path.split("/")
+        video_path = os.path.normpath(video_path)
+        li_video_path = video_path.split("\\")
         if len(li_video_path) < 4: raise ValueError("Video path should have min 4 components: {}".format(str(li_video_path)))
         video_name = li_video_path[-1].split(".")[0]
         target_dir = frame_dir + "/" + li_video_path[-3] + "/" + li_video_path[-2] + "/" + video_name
@@ -284,12 +288,15 @@ def video_dir_to_frames_dir(video_dir:str, frame_dir:str, frames_norm:int = None
         frames = video_to_frames(video_path, resize_min_dim)
 
         # length and fps
-        video_sec = video_length(video_path)
+        # video_sec = video_length(video_path)
         frames_count = len(frames)
-        fps = frames_count / video_sec   
+        # fps = frames_count / video_sec   
+
+        fps = 25;
 
         # downsample
-        if frames_norm != None: 
+        if frames_norm != None:
+            print(video_path)
             frames = frames_downsample(frames, frames_norm)
 
         # crop images
@@ -299,7 +306,7 @@ def video_dir_to_frames_dir(video_dir:str, frame_dir:str, frames_norm:int = None
         # write frames to .png files
         frames_to_files(frames, target_dir)         
 
-        print("Video %5d | %5.1f sec | %d frames | %4.1f fps | saved %s in %s" % (counter, video_sec, frames_count, fps, str(frames.shape), target_dir))
+        print("Video %5d | %d frames | %4.1f fps | saved %s in %s" % (counter, frames_count, fps, str(frames.shape), target_dir))
         counter += 1      
 
     return

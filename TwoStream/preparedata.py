@@ -24,7 +24,7 @@ def start_pipeline(video_set, video_dir, feature, image_dir, image_feature_dir):
     model = load_feature_extractor(feature)
 
     # Calculate MobileNet features from rgb frames
-    predict_features(image_dir + "/test", image_feature_dir + "/test", model, video_set["frames_norm"])
+    # predict_features(image_dir + "/test", image_feature_dir + "/test", model, video_set["frames_norm"])
 
     predict_features(image_dir + "/train", image_feature_dir + "/train", model, video_set["frames_norm"])
 
@@ -36,22 +36,22 @@ video_set = {
     "frames_norm": 18, # number of frames per video
     "min_dim": 224, # Smaller dimension of saved video frames
     "shape": (224, 224), # height, width
-    "fps_avg": 30,
+    "fps_avg": 25,
     "frames_avg": 18,
-    "duration_avg": 4.0
+    "duration_avg": 1.0
 }
 
 # feature extractor
 feature = {
     "name": "mobilenet",
     "input_shape": (224, 224, 3),
-    "output_shape": (1024, )
+    "output_shape": (1, 1, 1024)
 }
 
 video_dir = '../dataset/elar/videos/' # path of video files
 image_dir = '../dataset/elar/images/' # path of image files
 
-image_feature_dir = './dataset/elar/features/mobilenet_temp/25/images/01'
+image_feature_dir = '../dataset/elar/features/mobilenet_temp/'
 
 print("Extracting frames, optical flow and ... features ...")
 print(os.getcwd())

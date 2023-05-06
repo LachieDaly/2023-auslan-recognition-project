@@ -33,7 +33,7 @@ from keras.layers.convolutional import (Conv1D, Conv2D, MaxPooling2D)
 
 def load_feature_extractor(di_feature:dict) -> keras.Model:
 
-    model_name = di_feature["sName"]
+    model_name = di_feature["name"]
     print("Load 2D extraction model %s ..." % model_name)
 
     if (model_name == "mobilenet"):
@@ -139,11 +139,12 @@ def load_feature_extractor(di_feature:dict) -> keras.Model:
     tu_output_shape = model.output_shape[1:]
 
     print("Expected input shape %s, output shape %s" % (str(tu_input_shape), str(tu_output_shape)))
+    print("Supplied input shape %s, output shape %s" % (di_feature["input_shape"], di_feature["output_shape"]))
 
-    if tu_input_shape != di_feature["tuInputShape"]:
+    if tu_input_shape != di_feature["input_shape"]:
         raise ValueError("Unexpected input shape")
     
-    if tu_output_shape != di_feature["tuOutputShape"]:
+    if tu_output_shape != di_feature["output_shape"]:
         raise ValueError("Unexpected output shape")
 
     return model
@@ -159,18 +160,21 @@ def predict_features(frame_base_dir:str, features_base_dir:str, model:keras.Mode
 
     _, h, w, c = model.input_shape
     gen_frames = FramesGenerator(frame_base_dir, 1, frames_norm, h, w, c, 
-        classes_full = None, shuffle=False)
+        classes = None, shuffle=False)
 
     print("Predict features with %s ... " % model.name)
     count = 0
     # Predict - loop through all samples
-    for _, video in gen_frames.videos_df.iterrows():
+    for _, video in gen_frames._videos.iterrows():
         
         # ... frames_base_dir / class / videoname=frame-directory
         original_video = video.frame_dir
-        video_name = video.frame_dir.split("/")[-1]
+        video_name = os.path.normpath(video.frame_dir).split("\\")[-1]
+        # video_name = video.frame_dir.split("/")[-1]
+        print("Video name")
+        print(video_name)
         label = video.label
-        feature_path = features_base_dir + "/" + label + "/" + video_name + ".npy"
+        feature_path = features_base_dir + "/" + str(label) + "/" + video_name + ".npy"
 
         # check if already predicted
         if os.path.exists(feature_path):
@@ -189,7 +193,7 @@ def predict_features(frame_base_dir:str, features_base_dir:str, model:keras.Mode
             feature = model.predict(x, verbose=0)
 
         # save to file
-        os.makedirs(features_base_dir + "/" + label, exist_ok = True)
+        os.makedirs(features_base_dir + "/" + str(label), exist_ok = True)
         np.save(feature_path, feature)
 
         print("Video %5d: features %s saved to %s" % (count, str(feature.shape), feature_path))
