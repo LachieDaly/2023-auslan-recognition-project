@@ -27,7 +27,7 @@ from keras.callbacks import EarlyStopping, History
 #  
 
 
-def writeResults(hist, expPath,  useBatch=0):
+def write_results(hist, expPath,  useBatch=0):
     
     train_loss=hist.history['loss']
     val_loss=hist.history['val_loss']
@@ -46,7 +46,7 @@ def saveModelTimes(timeInfo, expPath):
 def writeCSVFile(data, fileName, pathName):
     pd.DataFrame(data).to_csv(os.path.join(pathName,fileName), sep=',')
 
-def visualizeHis(hist, experName, useBatch=0):
+def visualise_hist(hist, experiment_name, useBatch=0):
     # visualizing losses and accuracy
 
     train_loss=hist.history['loss']
@@ -65,7 +65,7 @@ def visualizeHis(hist, experName, useBatch=0):
     plt.title('Model loss')
     plt.grid(True)
     plt.legend(['Train','Validation'])
-    plt.savefig(experName +'/loss.png')
+    plt.savefig(experiment_name +'/loss.png')
     if useBatch == 1:
         plt.show()
     #print plt.style.available # use bmh, classic,ggplot for big pictures
@@ -80,11 +80,11 @@ def visualizeHis(hist, experName, useBatch=0):
     plt.grid(True)
     plt.legend(['Train','Validation'],loc=4)
 
-    plt.savefig(experName +'/acc.png')
+    plt.savefig(experiment_name +'/acc.png')
     if useBatch==1:
         plt.show()
 
-def printConfusionMatrix(y_test, numb_classes, y_pred, main_exp_folder):
+def print_confusion_matrix(y_test, numb_classes, y_pred, main_exp_folder):
     confusionMatrix = confusion_matrix(y_test, y_pred)
     print('Confusion Matrix: ', confusionMatrix.shape)
     filename =os.path.join(main_exp_folder,'CM.csv')
@@ -94,7 +94,7 @@ def printConfusionMatrix(y_test, numb_classes, y_pred, main_exp_folder):
     pd.DataFrame(y_pred).to_csv(os.path.join(main_exp_folder ,'predicted_testLabels.csv'), sep=',')
        
     # Visualizing of confusion matrix
-    plotCM = False
+    plotCM = True
     if plotCM:
         df_cm = pd.DataFrame(confusionMatrix, range(numb_classes), range(numb_classes))
         plt.figure(figsize = (numb_classes,numb_classes))
@@ -108,9 +108,11 @@ def printConfusionMatrix(y_test, numb_classes, y_pred, main_exp_folder):
     pd.DataFrame(df).to_csv(os.path.join(main_exp_folder, 'ResultMetrics.csv'), sep=',')
 
 
-def pretrainedModel(img_size, model_name, retrainModel=False, dataFormat='folder'):
+def pretrained_model(img_size, model_name, retrainModel=False, dataFormat='folder'):
 
     input_img = tf.keras.layers.Input(shape=(img_size, img_size, 3))
+    print("Input imgage")
+    print(input_img)
     if model_name == 'mobileNet':
         input_img = preprocess_input(input_img)
         model_cnn = tf.keras.applications.MobileNet(weights="imagenet",include_top=False, input_tensor=input_img)
@@ -127,9 +129,9 @@ def pretrainedModel(img_size, model_name, retrainModel=False, dataFormat='folder
     cnn_out = keras.layers.Dense(class_limit, activation="softmax")(cnn_out)
     model = tf.keras.models.Model(model_cnn.input, cnn_out)
     if dataFormat =='csv':
-        model.compile(metrics=['accuracy'], loss="categorical_crossentropy",optimizer=adam(learning_rate=1e-4))
+        model.compile(metrics=['accuracy'], loss="categorical_crossentropy", optimizer=adam(learning_rate=1e-4))
     else:
-        model.compile(metrics=['accuracy'], loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),optimizer=adam(learning_rate=1e-4))
+        model.compile(metrics=['accuracy'], loss=tf.keras.losses.SparseCategoricalCrossentropy(), optimizer=adam(learning_rate=1e-4))
 
     return model
 
@@ -143,7 +145,7 @@ def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model
     print('---------------------------------------START----------------------------')
     print(main_exp_folder)
     print('------------------------------------------------------------------------')
-    datagen_train = ImageDataGenerator(validation_split=0.10, rotation_range=10, zoom_range=0.2) #for ISA64 dataset
+    datagen_train = ImageDataGenerator(validation_split=0.20, rotation_range=10, zoom_range=0.2) #for ISA64 dataset
     #datagen_train = ImageDataGenerator(validation_split=0.20) #for KArSL
     datagen_test = ImageDataGenerator()
 
@@ -183,9 +185,7 @@ def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model
 
 
         train_ds = datagen_train.flow_from_directory(train_path,  batch_size=64, class_mode='sparse', target_size=(img_size, img_size), shuffle=True, seed=42, subset = "training")
-        print("Should be here right?")
-        print(train_ds)
-        val_ds = datagen_train.flow_from_directory(train_path,  batch_size=64, class_mode='sparse', target_size=(img_size, img_size), shuffle=True, seed=42, subset = "validation")
+        val_ds = datagen_train.flow_from_directory(train_path,  batch_size=64, class_mode='sparse', target_size=(img_size, img_size), shuffle=False, seed=42, subset = "validation")
         # test_ds = datagen_test.flow_from_directory(test_path,  batch_size=64, class_mode='sparse', target_size=(img_size, img_size), shuffle=False)
 
         STEP_SIZE_TRAIN= train_ds.samples // 64
@@ -194,7 +194,7 @@ def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model
 
     # model 
     if model_name =='mobileNet' and load_model == False:
-        model = pretrainedModel(img_size, model_name, retrainModel, dataFormat)
+        model = pretrained_model(img_size, model_name, retrainModel, dataFormat)
 
     early_stopper = EarlyStopping(monitor='val_loss', patience=10)
     time_callback = History()
@@ -205,37 +205,34 @@ def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model
         print(model.summary())
         es = 0
     else:    
-        hist = model.fit(train_ds, validation_data=val_ds, epochs = 1, callbacks=[time_callback, best_checkpoint, early_stopper])
+        hist = model.fit(train_ds, validation_data=val_ds, epochs = 100, callbacks=[time_callback, best_checkpoint, early_stopper])
         #save last model
         model.save(model_dest) 
         model = keras.models.load_model(filepath = main_exp_folder + "/model-best.h5")
         # es = early_stopper.get_epochNumber() 
         # timeInfo = time_callback.times 
         # saveModelTimes(timeInfo, main_exp_folder)
-        writeResults(hist, main_exp_folder, 0)     
-        visualizeHis(hist, main_exp_folder, 0)
+        write_results(hist, main_exp_folder, 0)     
+        visualise_hist(hist, main_exp_folder, 0)
 
         # test
         score, acc = model.evaluate(val_ds)
         print('val score:', score)
         print('val accuracy:', acc)
 
+        
 
+
+    model.load_weights(main_exp_folder + "/model-best.h5")
     Y_pred = model.predict(val_ds)
     y_pred = np.argmax(Y_pred, axis=1)
     pd.DataFrame(y_pred).to_csv(os.path.join(main_exp_folder ,'predicted_testLabels.csv'), sep=',')
-
 
     ### Get labels
     y_test = val_ds.labels 
     pd.DataFrame(y_test).to_csv(os.path.join(main_exp_folder ,'testLabels.csv'), sep=',')
 
-    ###
-    Y_pred = model.predict(val_ds)
-    y_pred = np.argmax(Y_pred, axis=1)
-    pd.DataFrame(y_pred).to_csv(os.path.join(main_exp_folder ,'predicted_testLabels.csv'), sep=',')
-
-    printConfusionMatrix(y_test, class_limit, y_pred, main_exp_folder)
+    print_confusion_matrix(y_test, class_limit, y_pred, main_exp_folder)
 
 
 ### Model configurations ######
@@ -246,11 +243,11 @@ dataFormat = 'folder' # 'csv' for csv files or 'folder' to read from folders
 
 #################
 
-train_path = "../dataset/elar/fusion/forward/train" #contains train signs after forward fusion
+train_path = "../dataset/elar/star/train" #contains train signs after forward fusion
 # test_path  = "/home/eye/lsa64_raw/fusion/forward/001" #contains test signs after forward fusion
-main_exp_folder = '../results/elar/'
+main_exp_folder = '../results/elar/star'
 model_dest = os.path.join(main_exp_folder, 'Last.h5')
 class_limit = 29
 load_model = False
-savedModel='../results/elar/model-best.h5'
+savedModel='../results/elar/star/model-best.h5'
 main(model_name, retrainModel, train_path, None, main_exp_folder, model_dest, class_limit, input_size, dataFormat, load_model, savedModel)
