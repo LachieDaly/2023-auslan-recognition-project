@@ -28,7 +28,7 @@ from keras.layers import Dense, Activation, Flatten, Dropout, ZeroPadding3D, Inp
 from keras.models import Model
 from keras import layers
 
-from transformer_model import TransformerEncoder, PositionalEmbedding
+# from transformer_model import TransformerEncoder, PositionalEmbedding
 
 def lstm_build(frames_norm:int, feature_length:int, num_classes:int, dropout:float = 0.5, model_name:str = 'None') : #-> tensorflow.keras.Model
 

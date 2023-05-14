@@ -21,7 +21,7 @@ def accumulative_video_motion():
         if not os.path.exists(os.path.join(new_path_star, filename)):
             os.makedirs(new_path_star, exist_ok=True)
             key_frames = glob.glob(sample_folder_full_path + '/*.png')
-            num_frames = len(list(key_frames))
+            # num_frames = len(list(key_frames))
             frame_array = []
             for key_frame in key_frames:
                 frame_array.append(cv2.imread(key_frame))
@@ -38,11 +38,9 @@ def accumulative_video_motion():
             green_matrix = calculate_star(green_range,2)
             red_matrix = calculate_star(red_range,3)
             star_representation = combine_matrices(blue_matrix, green_matrix, red_matrix)
-
             cv2.imwrite(os.path.join(new_path_star, f"{filename}.jpg"), star_representation)
 
 def calculate_star(section, num):
-    
     # print('calculate star')
     h = section[0].shape[0]
     w = section[0].shape[1]

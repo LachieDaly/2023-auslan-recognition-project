@@ -765,5 +765,5 @@ class VideoClasses():
         self._classes = list(self._class_df.s_class)
         self._classes_count = len(self._class_df)
 
-        print("Loaded %d classes from %s" % (self.nClasses, class_file))
+        print("Loaded %d classes from %s" % (self._classes_count, class_file))
         return

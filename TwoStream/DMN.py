@@ -19,17 +19,17 @@ import numpy as np
 import pandas as pd
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import classification_report, confusion_matrix
-from keras.callbacks import EarlyStopping,  TimeHistory, TestCallback_gen
+from keras.callbacks import EarlyStopping,  History
 
 import keras
 
-from datagenerator import Videclasses_object, FeaturesGenerator, FeaturesGenerator_withSplitting
-from model_lstm import lstm_build
+from datagenerator import VideoClasses, FeaturesGenerator, FeaturesGenerator_withSplitting
+from lstm_model import lstm_build
 
 
-def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:keras.Model, classes_object: Videclasses_object,
-    batch_size:int=16, num_epochs:int=1, learning_rate:float=1e-4, exp_full_path=None, val_available= True, csv_file = False, train_path = None, val_path=None, test_path=None, video_set=None, feature = None, load_model = False, saved_model=None) :
-    print(video_set    )
+def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:keras.Model, classes_object: VideoClasses,
+    batch_size:int=16, num_epochs:int=1, learning_rate:float=1e-4, exp_full_path=None, val_available=True, csv_file = False, train_path = None, val_path=None, test_path=None, video_set=None, feature = None, load_model = False, saved_model=None) :
+    print(video_set)
     if csv_file:
         print('===============================================')
         train_data = pd.read_csv(train_path, names=['index','cat','path','frame_count','signerID'], header=None)
@@ -47,9 +47,6 @@ def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:
 
             test_samples_df.reset_index(drop=True, in_place=True)
             labels_test =  pd.get_dummies(test_samples_df.path.apply(lambda s: s.split("/")[-2]).to_numpy().astype(int)).to_numpy()
-            #print(train_data)
-            
-            #samples_df.path = train_data.path
         else:
 
             test_data = pd.read_csv(test_path,names=['index','cat','path','frame_count','signerID'],header=None)
@@ -57,7 +54,7 @@ def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:
             test_samples_df.path = test_samples_df.path + ".npy"
             labels_test =  pd.get_dummies(test_data.path.apply(lambda s: s.split("/")[-2]).to_numpy().astype(int)).to_numpy()
 
-        # vladiation part
+        # validation part
         train_data, val_data, y_train, y_val = train_test_split( train_data, labels, test_size=0.20, random_state=42, stratify=labels)
         train_data.reset_index(drop=True, in_place=True)
         val_data.reset_index(drop=True, in_place=True)
@@ -99,7 +96,7 @@ def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:
 
     optimizer = keras.optimizers.Adam(lr = 1e-4) #1e-4
     model.compile(loss='categorical_crossentropy', optimizer=optimizer, metrics=['accuracy'])
-    time_callback = TimeHistory()
+    time_callback = History()
     
     # Fit!
     print("Fit with generator, learning rate %f ..." % learning_rate)
@@ -252,7 +249,7 @@ def train_model_lstm(video_set, feature, exp_full_path=None, exp_path=None, val_
 			o_flow_feature_dir = None, csv_file = False, train_path = None, val_path = None, test_path = None, load_model = False, saved_model=None):
 
     if os.path.exists(exp_full_path)  == False:
-        os.mkdir(exp_full_path,0o755)
+        os.mkdir(exp_full_path, 0o755)
 
     model_dir = exp_full_path #"model"
 
@@ -260,13 +257,13 @@ def train_model_lstm(video_set, feature, exp_full_path=None, exp_path=None, val_
     print(os.getcwd())
 
     # read the classes
-    classes_object = Videclasses_object(class_file)
+    classes_object = VideoClasses(class_file)
 
     # Image: Load and train the model
         
     log_path = os.path.join(exp_full_path, time.strftime("%Y%m%d-%H%M", time.gmtime()) + "-%s%03d-image-mobile-lstm.csv"%(video_set["name"], video_set["classes"]))
     print("Image log: %s" % log_path)
-    modelImage = lstm_build(video_set["frames_norm"], feature["output_shape"][0], classes_object.classes, dropout = 0.5, modelName = feature["name"])
+    modelImage = lstm_build(video_set["frames_norm"], feature["output_shape"][0], classes_object._classes, dropout = 0.5, model_name=feature["name"])
     train_feature_generator(image_feature_dir, model_dir, log_path, modelImage, classes_object,
         batch_size = 32, num_epochs = 1000, learning_rate = 1e-4, exp_full_path=exp_full_path, val_available=val_available,
         csv_file=csv_file,train_path=train_path,  val_path=val_path, test_path=test_path, video_set=video_set, feature = feature, load_model = load_model, saved_model=saved_model)
@@ -302,50 +299,9 @@ if __name__ == '__main__':
         "output_shape" : (1, 1, 1024)
     } # was 1024
 	
-    data_set_home_path ='/dataset/features/mobilenet_temp/'
-    folder_all = [None, None, None, None, None, None, None, None, None, None]*5
-    class_file_all       = "./data/ISA_64.csv"
-    video_dir_all        = [None, None, None, None, None, None, None, None, None, None]*5
-    image_dir_all        = [None, None, None, None, None, None, None, None, None, None]*5
-    image_feature_dir_all = [None, None, None, None, None, None, None, None, None, None]*5
-    o_flow_dir_all        = [None, None, None, None, None, None, None, None, None, None]*5 
-    o_flow_feature_dir_all = [None, None, None, None, None, None, None, None, None, None]*5 
+    data_set_home_path ='../dataset/features/mobilenet_temp/'
+    class_file_all       = "../data/ELAR.csv"
+    exp_path = "mobilenet"
+    exp_full_path = os.path.join(os.getcwd(), "results", exp_path)
 
-    csv_file_all = [True]*21
-    load_model_all = [False]*21
-    saved_model_all=[None]*21
-       
-	
-
-    train_path_all = [data_set_home_path+'/test_01.csv',
-	    data_set_home_path+'/test_02.csv',
-		data_set_home_path+'/test_03.csv',
-		data_set_home_path+'/test_04.csv',data_set_home_path+'/test_05.csv',
-		data_set_home_path+'/test_06.csv', data_set_home_path+'/test_07.csv', data_set_home_path+'/test_08.csv', data_set_home_path+'/test_09.csv', data_set_home_path+'/test_10.csv']
-    val_path_all = ['','','','','','','','','','','']*5
-
-    test_path_all = [data_set_home_path+'/all.csv',data_set_home_path+'/001.csv',
-	    data_set_home_path+'/002.csv',
-		data_set_home_path+'/003.csv',
-		data_set_home_path+'/004.csv',data_set_home_path+'/005.csv',
-		data_set_home_path+'/006.csv', data_set_home_path+'/007.csv', data_set_home_path+'/008.csv', data_set_home_path+'/009.csv', data_set_home_path+'/010.csv']
-    exp_path_all = ['IAS64_color_0011','IAS64_color_0012','IAS64_color_0013','IAS64_color_0014','IAS64_color_0015','IAS64_color_0016','IAS64_color_0017', 'IAS64_color_0018', 'IAS64_color_0019', 'IAS64_color_0020', 'IAS64_color_0021']
-
-    train_model_lstm(video_set)
-
-    val_available_all =[False]*22
-
-    i = 0
-    while i < len(exp_path_all):
-	
-        print(exp_path_all[i])
-        exp_path = exp_path_all[i]
-        val_available = val_available_all[i]
-        exp_full_path = os.path.join(os.getcwd(),'results',exp_path)
-        
-        train_model_lstm(video_set, feature, exp_full_path=exp_full_path, exp_path=exp_path, val_available=val_available,
-			folder = folder_all[i],class_file = class_file_all, video_dir = video_dir_all[i], image_dir = image_dir_all[i],
-			image_feature_dir = image_feature_dir_all[i], o_flow_dir = o_flow_dir_all[i], o_flow_feature_dir = o_flow_feature_dir_all[i],
-			csv_file = csv_file_all[i], train_path = train_path_all[i], val_path = val_path_all[i], test_path = test_path_all[i], load_model = load_model_all[i], saved_model=saved_model_all[i])
-        
-        i = i + 1
+    train_model_lstm(video_set, feature, exp_full_path, exp_path, None, None, class_file_all, None, None, None, None, None, False, None, None, None, False, None)
