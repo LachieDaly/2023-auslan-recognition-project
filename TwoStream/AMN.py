@@ -220,9 +220,6 @@ def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model
         print('val score:', score)
         print('val accuracy:', acc)
 
-        
-
-
     model.load_weights(main_exp_folder + "/model-best.h5")
     Y_pred = model.predict(val_ds)
     y_pred = np.argmax(Y_pred, axis=1)

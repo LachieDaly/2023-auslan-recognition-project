@@ -30,7 +30,6 @@ def accumulative_video_motion():
             num_frames = len(list(key_frames))
 
             if num_frames > 0:
-                print("Got here")
                 # Backward  
                 f = num_frames - 1
                 while f > 0:

@@ -643,7 +643,7 @@ class FeaturesGenerator_withSplitting(tf.keras.utils.Sequence):
         classes_full:list = None, shuffle:bool = True, video_set=None, feature = None):
         """
         Assume directory structure:
-        ... / sPath / class / feature.npy
+        ... / path / class / feature.npy
         """
 
         'Initialization'
@@ -661,7 +661,7 @@ class FeaturesGenerator_withSplitting(tf.keras.utils.Sequence):
         print("Detected %d samples in %s ..." % (self._sample_count, path))
 
         # test shape of first sample
-        x = np.load(self._samples_df.path[0])
+        x = np.load(self._samples_df.path[0]).squeeze()
         if self._video_set != None and self._video_set["reshape_input"] == True: 
             x = x.reshape(self._new_input_shape)
         else:
@@ -670,12 +670,10 @@ class FeaturesGenerator_withSplitting(tf.keras.utils.Sequence):
 
         # extract (text) labels from path
         labels =  self._samples_df.path.apply(lambda s: s.split("/")[-2])
-        self._samples_df.loc[:, "label"] = labels.astype(int) #hamzah: I added   .astype(int)       
-        #print(self.dfSamples.loc[:, "sLabel"])		
+        self._samples_df.loc[:, "label"] = labels.astype(int)
            
         # extract unique classes from all detected labels
-        self._classes = sorted(list(self._samples_df.sLabel.unique()))
-        #hamzah
+        self._classes = sorted(list(self._samples_df.label.unique()))
         self._classes = [int(i) for i in self._classes]
         #print(self.liClasses)		
 
@@ -691,7 +689,7 @@ class FeaturesGenerator_withSplitting(tf.keras.utils.Sequence):
         # encode labels
         label_encoder = LabelEncoder()
         label_encoder.fit(self._classes)
-        self._samples_df.loc[:, "label"] = label_encoder.transform(self._sample_df.label)
+        self._samples_df.loc[:, "label"] = label_encoder.transform(self._samples_df.label)
         
         self.on_epoch_end()
         return
@@ -716,7 +714,7 @@ class FeaturesGenerator_withSplitting(tf.keras.utils.Sequence):
         """
 
         # Generate indexes of the batch
-        indexes = self.indexes[step_count*self._batch_size:(step_count+1)*self._batch_size]
+        indexes = self._indexes[step_count*self._batch_size:(step_count+1)*self._batch_size]
 
         # Find selected samples
         sample_batch = self._samples_df.loc[indexes, :]
@@ -740,7 +738,7 @@ class FeaturesGenerator_withSplitting(tf.keras.utils.Sequence):
         'Generates data for 1 sample' 
         try:
             #print(seSample.sPath)
-            x = np.load(sample.path)
+            x = np.load(sample.path).squeeze()
             #print(arX.shape)
             if self._video_set != None and self._video_set["reshape_input"] == True: 
                 x = x.reshape(self._new_input_shape) 
