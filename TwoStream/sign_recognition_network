@@ -1,0 +1,74 @@
+from dataclasses import asdict
+
+import os
+import glob
+import time
+import sys
+import warnings
+import seaborn as sn
+from matplotlib import pyplot as plt
+
+import numpy as np
+import pandas as pd
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import classification_report, confusion_matrix
+from keras.callbacks import EarlyStopping, CSVLogger # TimeHistory
+from keras.optimizers import Adam
+
+from math import ceil
+
+import keras
+
+import tensorflow as tf
+
+from data_generator import VideoClasses, FeaturesGeneratorMultiInput
+from lstm_model import lstm_build_multi_single
+
+def read_data(data_path, convert_to_int=False, ext=".npy"):
+    data_all = pd.read_csv(data_path, names=["index", "cat", "path", "frame_num", "signer_id"], header=None)
+
+    if convert_to_int:
+        samples_df = data_all.path.to_frame()
+        samples_df.path = samples_df.path + ext
+        labels = pd.get_dummies(data_all.path.apply(lambda s: s.split("/")[-2]).to_numpy().astype(int)).to_numpy()
+    else:
+        samples_df = data_all["path"].copy().to_frame()
+        samples_df = samples_df.path + ext
+        labels = data_all.path.apply(lambda s: s.split("/")[-2])
+    
+    return samples_df, labels
+
+def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:keras.Model, classes:VideoClasses,
+                            batch_size:int=16, epochs:int=100, learning_rate:float=1e-4, exp_full_path=None,
+                            val_available=True, csv_file=False, train_path_one=None, val_path_one=None,
+                            train_path_two=None, val_path_two=None, load_model=False, save_model=None):
+    if csv_file:
+        samples_df, labels = read_data(train_path_one)
+
+        indices = np.arange(samples_df.shape[0])
+        train_data_one, val_data_one, _, _ = train_test_split(samples_df, labels, indices, test_size=0.2, stratify=labels)
+        train_data_one.reset_index(drop=True, inplace=True)
+        val_data_one.reset_index(drop=True, inplace=True)
+        print(train_data_one.shape)
+
+    if load_model == False:
+        gen_training_features = FeaturesGeneratorMultiInput(train_data_one, train_path_two, batch_size, model.input_shape[0][1:], model.input_shape[1][1:], classes._classes, shuffle=True)
+        gen_validation_features = FeaturesGeneratorMultiInput(val_data_one, train_path_one, batch_size, model.input_shape[0][1:], model.input_shape[1][1:], classes._classes, shuffle=True)
+
+    csv_logger = CSVLogger(log_path.split(".")[0] + "-acc.csv")
+
+    early_stopper = EarlyStopping(monitor="val_loss", patience=10)
+
+    os.makedirs(model_dir, exist_ok=True)
+    best_checkpoint = keras.callbacks.ModelCheckpoint(
+        filepath = model_dir + "/model-best.h5",
+        verbose = 1, save_best_only = True)
+    
+    optimizer = Adam(learning_rate=learning_rate)
+    model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=["accuracy"])
+    # time_callback = TimeHistory() can I replace this with something
+
+    print("Fit with generator, learning rate %f ..." % learning_rate)
+    
+
+

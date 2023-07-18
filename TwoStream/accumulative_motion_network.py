@@ -11,7 +11,7 @@ from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import image_dataset_from_directory
 from keras.optimizers import Adam as adam
 from keras.applications.mobilenet import preprocess_input
-from keras.callbacks import EarlyStopping
+from keras.callbacks import EarlyStopping, CSVLogger
 from keras.models import Sequential
 from keras import layers
 import pandas as pd
