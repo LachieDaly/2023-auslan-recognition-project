@@ -47,6 +47,7 @@ def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:
 
         indices = np.arange(samples_df.shape[0])
         train_data_one, val_data_one, _, _ = train_test_split(samples_df, labels, indices, test_size=0.2, stratify=labels)
+        val_labels_one =  pd.get_dummies(val_data_one.path.apply(lambda s: s.split("/")[-2]).to_numpy().astype(int)).to_numpy() # hope this good
         train_data_one.reset_index(drop=True, inplace=True)
         val_data_one.reset_index(drop=True, inplace=True)
         print(train_data_one.shape)
@@ -69,6 +70,172 @@ def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:
     # time_callback = TimeHistory() can I replace this with something
 
     print("Fit with generator, learning rate %f ..." % learning_rate)
+    n_points = val_labels_one.shape[0]
+    steps_per_epoch = ceil(n_points / batch_size)
+
+    if load_model:
+        model = []
+        model = tf.keras.models.load_model(saved_model)
+        es = 0
+    else:
+        hist = model.fit(
+            gen_training_features,
+            validation_data=gen_validation_features,
+            epochs=epochs,
+            workers=1,
+            use_multiprocessing=False,
+            verbose=1,
+            steps_per_epoch=steps_per_epoch,
+            callbacks=[csv_logger, best_checkpoint, early_stopper])
+        
+        gen_training_features = []
+        gen_validation_features = []
+
+        es = early_stopper.stopped_epoch
     
+def save_model_times(time_info, exp_path):
+    # print and save model times
+    print("Total time:")
+    print(np.sum(time_info))
+
+def write_CSV_file(data, filename, path_name):
+    pd.DataFrame(data).to_csv(os.path.join(path_name, filename), sep=",")
+
+def write_results(hist, exp_path, use_batch=0):
+    train_loss = hist.history["loss"]
+    val_loss = hist.history["val_loss"]
+    train_acc = hist.history["accuracy"]
+    val_acc = hist.history["val_accuracy"]
+
+    data_frame_data = np.transpose([train_loss, train_acc, val_loss, val_acc])
+
+    write_CSV_file(data_frame_data, "train_val_losses_acc.csv", exp_path)
+
+def test(rm, es, main_exp_folder, load_to_memory, class_limit, test_generator=None, X_test=None, y_test=None):
+    if load_to_memory:
+        loss, acc = rm.evaluate(X_test, y_test, verbose=0)
+    else:
+        loss, acc = rm.evaluate(test_generator, verbose=0)
+
+    print("\nTesting loss: {}, acc: {}\n".format(loss, acc))
+
+    f = open(main_exp_folder + "/testAccuracy.txt", "a")
+
+    early_stopping_epoch = es
+    f.write("Early stopped at:\t" + str(early_stopping_epoch) + "\t" + str(loss) + " " + str(acc) + "\n")
+    
+    if load_to_memory:
+        Y_pred = rm.predict(X_test)
+        y_pred = np.argmax(Y_pred, axis=1)
+        print_confusion_matrix(X_test, y_test, class_limit, y_pred, main_exp_folder)
+    
+    else:
+        Y_pred = rm.predict_generator(test_generator,
+                                      workers = 1,
+                                      use_multiprocessing = False,
+                                      verbose = 1)
+        
+        y_pred = Y_pred.argmax(axis=1)
+
+        print_confusion_matrix(X_test, y_test, class_limit, y_pred, main_exp_folder)
+
+def print_confusion_matrix(X_test, y_test, numb_classes, y_pred, main_exp_folder):
+    cm = confusion_matrix(y_test.argmax(axis=1), y_pred)
+    print("Confusion Matrix: ", confusion_matrix.shape)
+    filename = os.path.join(main_exp_folder, "CM.csv")
+
+    pd.DataFrame(cm).to_csv(filename, sep=",")
+    pd.DataFrame(y_test.argmax(axis=1)).to_csv(os.path.join(main_exp_folder, "testLabels.csv"), sep=",")
+    pd.DataFrame(y_pred).to_csv(os.path.join(main_exp_folder, "predicted_testLabels.csv"), sep=",")
+
+    # Visualising of confusion matrix
+    plot_cm = False
+    if plot_cm:
+        df_cm = pd.DataFrame(cm, range(numb_classes), range(numb_classes))
+        plt.figure(figsize=(numb_classes, numb_classes))
+        sn.set(font_scale=1.4)
+        sn.heatmap(df_cm, annot=True, annot_kws={"size": 12})
+        plt.savefig(os.path.join(main_exp_folder, "cm.png"))
+
+    class_metrics = classification_report(y_test.argmax(axis=1), y_pred, output_dict=True)
+    print(classification_report(y_test.argmax(axis=1), y_pred))
+    df = pd.DataFrame(class_metrics).transpose()
+    pd.DataFrame(df).to_csv(os.path.join(main_exp_folder, "ResultsMetrics.csv"), sep=",")
+
+def visualise_hist(hist, exper_name, use_batch):
+    train_loss = hist.history["loss"]
+    val_loss = hist.history["val_loss"]
+    train_acc = hist.history["accuracy"]
+    val_acc = hist.history["val_accuracy"]
+
+    xc = range(len(val_acc))
+
+    plt.figure(3)
+    plt.plot(xc, train_loss)
+    plt.plot(xc, val_loss)
+
+    plt.xlabel("Epochs")
+    plt.ylabel("Loss")
+    plt.title("Model loss")
+    plt.grid(True)
+    plt.legend(["Train", "Validation"])
+    plt.savefig(exper_name + "/loss.png")
+    if use_batch == 1:
+        plt.show()
+
+    plt.figure(4)
+    plt.plot(xc, train_acc)
+    plt.plot(xc, val_acc)
+    plt.xlabel("Epochs")
+    plt.ylabel("Accuracy")
+    plt.title("Model Accuracy")
+    plt.grid(True)
+    plt.legend(["Train", "Validation"], loc=4)
+
+    plt.savefig(exper_name + "/acc.png")
+    if use_batch == 1:
+        plt.show()
+
+def train_mobile_lstm(video_set, feature_one, feature_two, exp_full_path=None, exp_path=None, val_available=None, \
+                      csv_file=None, train_path_one=None, val_path_one=None, train_path_two=None, val_path_two=None, \
+                        class_file=None, image_feature_dir=None, load_model=False, saved_model=None):
+    
+    if os.path.exists(exp_full_path) == False:
+        os.mkdir(exp_full_path, 0o755)
+
+    model_dir = exp_full_path
+
+    print("\nStarting training...")
+    print(os.getcwd())
+
+    # read the classes
+    classes = VideoClasses(class_file)
+
+    log_path = os.path.join(exp_full_path, time.strftime("%Y%m%d-%H%M", time.gmtime()) + "-%s%03d-image-mobile-lstm.csv"%(video_set["name"], video_set["classes_count"]))
+    print("Image log: %s" % log_path)
+
+    model_image = lstm_build_multi_single(video_set["frames_norm"], feature_one["output_shape"][0], feature_two["output_shape"][0], classes.classes_count, dropout=0.5)
+
+    train_feature_generator(image_feature_dir, model_dir, log_path, model_image, classes,
+                            batch_size=32, epochs=100, learning_rate=1e-4, exp_full_path=exp_full_path, 
+                            val_available=val_available, csv_file=csv_file, train_path_one=train_path_one,
+                            val_path_one=val_path_one, train_path_two=train_path_two, val_path_two=val_path_two,
+                            load_model=load_model, saved_model=saved_model)
+    
+    return
+
+if __name__ == '__main__':
+    # Implement later :)
+    video_set = {
+
+    }
+
+    feature_one = {
+
+    }
+
+    feature_two = {
+        
+    }
 
 
