@@ -280,11 +280,11 @@ if __name__ == '__main__':
         "output_shape" : (1024, )
     } # was 1024
 	
-    data_set_home_path ='./dataset/features/mobilenet_temp/'
-    class_file_all       = "./data/ELAR_classes.csv"
-    train_path = "./data/ELAR.csv"
+    data_set_home_path ='./Data/features/mobilenet_temp/'
+    class_file_all       = "./DataInfo/ELAR_classes.csv"
+    train_path = "./DataInfo/ELAR.csv"
     exp_path = "./mobilenet/20230717_100Epoch_32Batch"
     exp_full_path = os.path.join(os.getcwd(), "results", exp_path)
-    image_dir = './dataset/images/'
+    image_dir = './Data/images/'
 
     train_model_lstm(video_set, feature, exp_full_path, exp_path, None, None, class_file_all, None, None, image_dir, None, None, True, train_path, None, None, False, None)

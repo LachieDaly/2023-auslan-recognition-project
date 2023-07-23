@@ -367,7 +367,7 @@ class FeaturesGenerator_multi_withSplitting(tf.keras.utils.Sequence):
             print(sample.path)
             raise ValueError("Error "+ sample.path)
 
-class FeaturesGenerator_multiInput(tf.keras.utils.Sequence):
+class FeaturesGeneratorMultiInput(tf.keras.utils.Sequence):
     """
     return samples from two sources and check if they match
     """

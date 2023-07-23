@@ -227,15 +227,70 @@ def train_mobile_lstm(video_set, feature_one, feature_two, exp_full_path=None, e
 if __name__ == '__main__':
     # Implement later :)
     video_set = {
-
+        "name" : "multi-sign",
+        "classes" : 29,
+        "frames_norm" : 18,
+        "min_dim" : 224,
+        "shape" : 30,
+        "frames_avg" : 50,
+        "avg_duration" : 2.0
     }
 
     feature_one = {
-
+        "name" : "mobilenet",
+        "input_shape" : (224, 224, 3),
+        "output_shape" : (1024, )
     }
 
     feature_two = {
-        
+        "name" : "mobilenet",
+        "input_shape" : (224, 224, 3),
+        "output_shape" : (1024, )
     }
 
+    
+    class_file_all = "./DataInfo/ELAR_classes.csv"
 
+    image_feature_dir_all = "" # Is this required
+
+    dataset_home_path = "./Data/ELAR"
+
+    train_path_one = "./DataInfo/ELAR.csv"
+
+    val_path_one = ""
+
+    test_path_one = "" # I don't want a test path for now
+
+    # Possibly need to update things in these paths
+    data_set_home_path_forward = "./Data/ELAR/fusion/backward"
+    data_set_home_path_backward = "./Data/ELAR/fusion/backward"
+    data_set_home_path_both = "./Data/ELAR/fusion/both"
+    data_set_home_path_star = "./Data/ELAR/star"
+
+    train_path_two = [
+        data_set_home_path_forward,
+        data_set_home_path_backward,
+        data_set_home_path_both,
+        data_set_home_path_star,
+    ]
+
+    val_path_two = ""
+
+    experiment_paths = "" # What this?
+
+    load_model = [False] * 3
+    saved_model = [None] * 3
+
+    csv_file = [True] * 3
+    val_available = [False] * 3
+
+    i = 0
+    print("==============================")
+    print(len(experiment_paths))
+    while i < len(experiment_paths):
+        experiment_path = experiment_paths[i]
+        print(experiment_path)
+        val_available = val_available[i]
+        full_experiment_path = os.path.join(os.getcwd(), "results", experiment_path)
+        train_mobile_lstm() # fill this in :)
+        i += 1
