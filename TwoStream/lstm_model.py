@@ -91,7 +91,6 @@ def lstm_build_multi(frames_norm:int, feature_length_01:int, feature_length_02:i
 def lstm_build_multi_single(frames_norm:int, feature_length_01:int, feature_length_02:int, num_classes:int, dropout:float = 0.5, model_name:str = 'None'): #-> keras.Model:
 
     # Build a fused LSTM and CNN (LSTM for frames and CNN for a single image per video)
- 
 
     ## Model 01
     input_frames =  Input(shape=(frames_norm, feature_length_01), name='input_frames')
