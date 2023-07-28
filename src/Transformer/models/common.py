@@ -9,7 +9,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from torchvision.model import resnet18, resnet34
+from torchvision.models import resnet18, resnet34
 
 class FeatureExtractor(nn.Module):
     """Feature extractor for RGB clips, powered by a 2D CNN backbone."""
@@ -75,8 +75,8 @@ class SelfAttention(nn.Module):
         self.position_encoding = PositionEncoding(sequence_size, hidden_size)
 
         self.layers = nn.ModuleList([
-            DecoderBlock(inp_size, hid_size hid_size * inner_hidden_factor, n_head, hid_size // n_head,
-                hid_size // n_head, layer_norm=layer_norm)
+            DecoderBlock(inp_size, hid_size, hid_size * inner_hidden_factor, n_head, hid_size // n_head,
+                         hid_size // n_head, layer_norm=layer_norm)
             for i, (inp_size, hid_size, n_head) in enumerate(zip(input_sizes, hidden_sizes, n_heads))
         ])
 
@@ -158,7 +158,7 @@ class LayerNormalisation(nn.Module):
 
 class MultiHeadAttention(nn.Module):
     """Multi-Head Attention module"""
-    def __init__(self, n_head, input_size, output_size, d_k, d_v, dropout=0.1, layer_norm=True)
+    def __init__(self, n_head, input_size, output_size, d_k, d_v, dropout=0.1, layer_norm=True):
         """
             n_head: Number of attention heads
             input_size: Input feature size
@@ -208,9 +208,9 @@ class MultiHeadAttention(nn.Module):
 
         outputs, attns = self.attention(q_s, k_s, v_s)
 
-        split_size = mb_size.item() if isintance(mb_size, torch.Tensor) else mb_size
+        split_size = mb_size.item() if isinstance(mb_size, torch.Tensor) else mb_size
         h, t, e = outputs.size()
-        outputs = outputs.view( h // split-size, split_size, t, e) # (B x T x H*E)
+        outputs = outputs.view( h // split_size, split_size, t, e) # (B x T x H*E)
         outputs = outputs.permute(1, 2, 0, 3).contiguous().view(split_size, len_q)
 
         outputs = self.dropout(outputs)
