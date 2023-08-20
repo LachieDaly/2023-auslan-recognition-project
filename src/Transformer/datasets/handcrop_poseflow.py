@@ -13,7 +13,7 @@ from .common import collect_samples
 from .transforms import Compose, Scale, MultiScaleCrop, ToFloatTensor, PermuteImage, Normalize, scales, NORM_STD_IMGNET, \
     NORM_MEAN_IMGNET, CenterCrop, IMAGE_SIZE, DeleteFlowKeypoints, ColorJitter, RandomHorizontalFlip
 
-_DATA_DIR_LOCAL = '/project/data/chalearn21/data/mp4' # it has got to change
+_DATA_DIR_LOCAL = '/project/data/ELAR/videos' # it has got to change
 
 SHOULDER_DIST_EPSILON = 1.2
 WRIST_DELTA = 0.15

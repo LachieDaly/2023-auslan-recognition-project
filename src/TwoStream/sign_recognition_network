@@ -297,6 +297,5 @@ if __name__ == '__main__':
                           train_path_one=train_path_one, val_path_one = val_path_one, 
                           train_path_two=train_path_two[i], val_path_two=val_path_two[i],
                           class_file=class_file_all, image_feature_dir=image_feature_dir_all[i],
-                          load_model=load_model[i], saved_model=saved_model[i]
-        )
+                          load_model=load_model[i], saved_model=saved_model[i])
         i += 1
