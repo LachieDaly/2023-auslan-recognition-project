@@ -13,7 +13,7 @@ from .common import collect_samples
 from .transforms import Compose, Scale, MultiScaleCrop, ToFloatTensor, PermuteImage, Normalize, scales, NORM_STD_IMGNET, \
     NORM_MEAN_IMGNET, CenterCrop, IMAGE_SIZE, DeleteFlowKeypoints, ColorJitter, RandomHorizontalFlip
 
-_DATA_DIR_LOCAL = '/project/data/ELAR/videos' # it has got to change
+_DATA_DIR_LOCAL = '/Data/ELAR/avi' # it has got to change
 
 SHOULDER_DIST_EPSILON = 1.2
 WRIST_DELTA = 0.15
@@ -43,29 +43,56 @@ class ChaLearnDataModule(pl.LightningDataModule):
                             RandomHorizontalFlip(), ColorJitter(0.5, 0.5, 0.5),
                             ToFloatTensor(), PermuteImage(),
                             Normalize(NORM_MEAN_IMGNET, NORM_STD_IMGNET))
-        self.train_set = ChaLearnDataset(self.data_dir, 'train', 'train',
-                                         os.path.join(self.data_dir, '..', '..', 'train_val_labels_STAGE2.csv'),
-                                         transform, self.sequence_length, self.temporal_stride)
-        return DataLoader(self.train_set, batch_size=self.batch_size, num_workers=self.num_workers, pin_memory=True,
+        
+        self.train_set = ChaLearnDataset(self.data_dir, 
+                                         'train', 
+                                         'train',
+                                         os.path.join(self.data_dir, '..', '..', 'train_val_labels.csv'),
+                                         transform, 
+                                         self.sequence_length, 
+                                         self.temporal_stride)
+        
+        return DataLoader(self.train_set, 
+                          batch_size=self.batch_size, 
+                          num_workers=self.num_workers, 
+                          pin_memory=True,
                           shuffle=True)
 
     def val_dataloader(self):
         transform = Compose(Scale(IMAGE_SIZE * 8 // 7), CenterCrop(IMAGE_SIZE), ToFloatTensor(),
                             PermuteImage(),
                             Normalize(NORM_MEAN_IMGNET, NORM_STD_IMGNET))
-        self.val_set = ChaLearnDataset(self.data_dir, 'val', 'val',
-                                       os.path.join(self.data_dir, '..', '..', 'train_val_labels_STAGE2.csv'),
+        
+        self.val_set = ChaLearnDataset(self.data_dir, 
+                                       'train', 
+                                       'val',
+                                       os.path.join(self.data_dir, '..', '..', 'train_val_labels.csv'),
                                        transform,
                                        self.sequence_length, self.temporal_stride)
-        return DataLoader(self.val_set, batch_size=self.batch_size, num_workers=self.num_workers, pin_memory=True)
+        
+        return DataLoader(self.val_set, 
+                          batch_size=self.
+                          batch_size, 
+                          num_workers=self.num_workers, 
+                          pin_memory=True)
 
     def test_dataloader(self):
         transform = Compose(Scale(IMAGE_SIZE * 8 // 7), CenterCrop(IMAGE_SIZE), ToFloatTensor(),
                             PermuteImage(),
                             Normalize(NORM_MEAN_IMGNET, NORM_STD_IMGNET))
-        self.test_set = ChaLearnDataset(self.data_dir, 'test', 'test', None, transform, self.sequence_length,
+        
+        self.test_set = ChaLearnDataset(self.data_dir, 
+                                        'train', 
+                                        'val', 
+                                        os.path.join(self.data_dir, '..', '..', 'train_val_labels.csv'), 
+                                        transform, 
+                                        self.sequence_length,
                                         self.temporal_stride)
-        return DataLoader(self.test_set, batch_size=self.batch_size, num_workers=self.num_workers, pin_memory=True)
+        
+        return DataLoader(self.test_set, 
+                          batch_size=self.batch_size, 
+                          num_workers=self.num_workers, 
+                          pin_memory=True)
 
     @staticmethod
     def add_datamodule_specific_args(parent_parser):
@@ -103,9 +130,9 @@ class ChaLearnDataset(Dataset):
         poseflow_clip = []
         missing_wrists_left, missing_wrists_right = [], []
         for frame_index in sample['frames']:
-            kp_path = os.path.join(self.root_path.replace('mp4', 'kp'), self.job_path,
-                                   sample['path'].replace('mp4', 'kp'), '{}_{:012d}_keypoints.json'.format(
-                    sample['path'].split('/')[-1].replace('.mp4', ''), frame_index))
+            kp_path = os.path.join(self.root_path.replace('avi', 'kp'), self.job_path,
+                                   sample['path'].replace('avi', 'kp'), '{}_{:012d}_keypoints.json'.format(
+                    sample['path'].split('/')[-1].replace('.avi', ''), frame_index))
 
             with open(kp_path, 'r') as keypoints_file:
                 value = json.loads(keypoints_file.read())
@@ -117,11 +144,11 @@ class ChaLearnDataset(Dataset):
             poseflow = None
             frame_index_poseflow = frame_index
             if frame_index_poseflow > 0:
-                full_path = os.path.join(sample['path'].replace('mp4', 'kpflow2'),
+                full_path = os.path.join(sample['path'].replace('avi', 'kpflow2'),
                                          'flow_{:05d}.npy'.format(frame_index_poseflow))
                 while not os.path.isfile(full_path):  # WORKAROUND FOR MISSING FILES!!!
                     frame_index_poseflow -= 1
-                    full_path = os.path.join(sample['path'].replace('mp4', 'kpflow2'),
+                    full_path = os.path.join(sample['path'].replace('avi', 'kpflow2'),
                                              'flow_{:05d}.npy'.format(frame_index_poseflow))
 
                 value = np.load(full_path)

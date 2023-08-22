@@ -6,7 +6,8 @@ For tuning of the hyperparameters, see tune.py
 import importlib
 from argparse import ArgumentParser
 
-import pytorch_lightning as pl
+import lightning.pytorch as pl
+from lightning.pytorch.cli import LightningCLI
 from pytorch_lightning.callbacks import EarlyStopping, LearningRateMonitor
 from pytorch_lightning.loggers import TensorBoardLogger
 
@@ -31,8 +32,9 @@ if __name__ == "__main__":
     data_module = importlib.import_module(f'datasets.{program_args.dataset}')
     parser = data_module.get_datamodule_def().add_datamodule_specific_args(parser)
 
+    cli = LightningCLI()
     # trainer specific
-    parser = pl.Trainer.add_argparse_args(parser)
+    cli.add_arguments_to_parser(parser)
 
     args = parser.parse_args()
 
