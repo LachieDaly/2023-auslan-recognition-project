@@ -1,0 +1,91 @@
+import cv2
+import random
+import numpy as np
+from threading import Thread
+import time
+
+"""
+Can be used to demonstrate star rgb preprocessing
+using webcam footage
+"""
+
+def rgb_star_representation(frames):
+    frame_number = len(frames)
+    if frame_number > 6:
+        # print(frame_number)
+        section_number = frame_number // 3
+        extra_frames = frame_number % 3
+        first_slice = section_number
+        # print(first_slice)
+        second_slice = 2 * section_number + extra_frames
+        # print(second_slice)
+        blue_range = frames[0:first_slice]
+        green_range = frames[first_slice:second_slice]
+        red_range = frames[second_slice:]
+        blue_matrix = calculate_star(blue_range,1)
+        green_matrix = calculate_star(green_range,2)
+        red_matrix = calculate_star(red_range,3)
+        star_representation = combine_matrices(blue_matrix, green_matrix, red_matrix)
+        return star_representation
+
+def calculate_star(section, num):
+    # print('calculate star')
+    h = section[0].shape[0]
+    w = section[0].shape[1]
+    # print(h, w)
+    result = np.zeros((h, w), np.uint8)
+    for k in range(1,len(section)):
+        current_frame_norm = np.linalg.norm(section[k], axis=2)
+        previous_frame_norm = np.linalg.norm(section[k-1], axis=2)
+        euclidean = np.absolute(previous_frame_norm - current_frame_norm)
+        # multiplied = np.multiply(section[k-1], section[k])
+        # dot_product = np.sum(multiplied, axis=2)
+        dot_product = np.vdot(section[k-1], section[k])
+        # dot_product = np.dot(section[k-1], section[k])
+        product_of_lengths = current_frame_norm*previous_frame_norm
+        angle = 1 - ((dot_product)/(product_of_lengths))
+        result = result + (1 - (angle/2))*euclidean    
+    return result
+
+frames = []
+
+def combine_matrices(blue, green, red):
+    image = np.stack((blue, green, red), axis=2)    
+    return image
+
+def threaded_function(name):
+    while True:
+        time.sleep(0.1)
+        global frames
+        if len(frames) > 20:
+            process_frames = frames
+            frames = []
+            star_image = rgb_star_representation(process_frames)
+            if star_image is not None:
+                star_image = cv2.normalize(src=star_image, dst=None, alpha=0, beta=255, norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_8U)
+                cv2.imshow('Processed', cv2.flip(star_image,1))
+                cv2.waitKey(1)
+
+
+cap = cv2.VideoCapture(0)
+x = Thread(target=threaded_function, args=(1,))
+x.daemon = True
+x.start()
+while cap.isOpened():
+    success, image = cap.read()
+    if not success:
+      # If loading a video, use 'break' instead of 'continue'.
+        continue
+    
+    frames.append(image)
+    # Flip the image horizontally for a selfie-view display.
+    cv2.imshow('Video', cv2.flip(image, 1))
+    if cv2.waitKey(5) & 0xFF == 27:
+      break
+cap.release()
+
+
+
+
+
+
