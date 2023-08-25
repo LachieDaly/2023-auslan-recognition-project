@@ -76,15 +76,12 @@ def normalise(poses):
 
 def main(args):
     input_dirs = sorted(glob.glob(os.path.join(args.input_dir, "*", "*.kp")))
-    print(input_dirs)
     input_dir_index = 0
     total = len(input_dirs)
     for input_dir in input_dirs:
-        print(f'{input_dir_index}/{total}')
         input_dir_index += 1
 
         output_dir = input_dir.replace("kp", "kpflow2")
-        print(output_dir)
         os.makedirs(output_dir, exist_ok=True)
 
         kp_files = sorted(glob.glob(os.path.join(input_dir, "*.json")))

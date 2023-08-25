@@ -1,6 +1,7 @@
 import csv
 import glob
 import os
+from pathlib import Path
 
 # I'm going to have to check this out in more detail
 def collect_samples(has_labels, root_path, job_path, sequence_length, temporal_stride, job, label_file_path,

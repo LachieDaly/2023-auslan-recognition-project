@@ -10,10 +10,7 @@ import torchvision
 
 def main(args):
     for dataset in ["train", "val", "test"]:
-        print(args.input_dir)
-        print(os.path.join(args.input_dir, dataset))
         videos = glob.glob(os.path.join(args.input_dir, dataset, '*/*.avi'))
-        print(videos)
         for video_file in videos:
             frames, _, _ = torchvision.io.read_video(video_file, pts_unit="sec")
             with open(video_file.replace(".avi", "_nframes"), "w") as of:

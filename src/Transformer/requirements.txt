@@ -8,3 +8,6 @@ av==8.0.2
 wget==3.2
 zsvision==0.6.18
 beartype==0.5.1
+$LOG_DIR = "Models\src\Transformer\results"
+$NUM_WORKERS = 2
+$DATA_DIR = "Data\ELAR\avi"

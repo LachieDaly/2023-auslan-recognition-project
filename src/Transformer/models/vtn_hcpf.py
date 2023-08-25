@@ -48,11 +48,11 @@ class VTNHCPF(nn.Module):
         # reshape back to extract features of both wrist crops as one feature vecotr
         z = z.view(b, t, -1)
 
-        zp = torch.cat((x, pose_clip), dim=-1)
+        zp = torch.cat((z, pose_clip), dim=-1)
 
         zp = self.norm(zp)
-        zp = torch.nn.functional.relu(self.bottle_mm(zp))
-
+        zp = self.bottle_mm(zp)
+        zp = torch.nn.functional.relu(zp).clone()
         zp = self.self_attention_decoder(zp)
 
         y = self.classifier(zp)

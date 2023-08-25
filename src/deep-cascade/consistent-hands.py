@@ -100,7 +100,6 @@ def build_feature_extractor():
     preprocessed = preprocess_input(inputs)
 
     outputs = feature_extractor(preprocessed)
-    # print(outputs.shape)
     return keras.Model(inputs, outputs, name="feature_extractor")
 
 feature_extractor = build_feature_extractor()
@@ -132,7 +131,6 @@ def calculate_orientation(width, height):
     elif height > width:
         value = -1
 
-    # print(value)
     return np.full(shape=25, fill_value=value, dtype='int')
 
 def calculate_slope_orientation(left_border_box, right_border_box):
@@ -290,7 +288,6 @@ def mediapipe_extraction(frame, prev_left_keypoints, prev_right_keypoints, prev_
         max_num_hands=2,
         min_detection_confidence=0.01) as hands:
         # Where the magic happens 
-        # print(frame.shape)
         results = hands.process(frame)
         # immediately resize frame
         image = cv2.resize(frame, (IMG_SIZE, IMG_SIZE))
@@ -324,7 +321,6 @@ def mediapipe_extraction(frame, prev_left_keypoints, prev_right_keypoints, prev_
     # cv2.imshow("Hands", cv2.cvtColor(output_image, cv2.COLOR_BGR2RGB))
     # cv2.imshow("Full", cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
     # cv2.waitKey(1)
-    # print(mediapipe_features)
     return mediapipe_features, output_image, left_border_box, right_border_box
 
 

@@ -5,7 +5,8 @@ Delegates computation to one of the defined networks (vtn.py, vtn_hc.py, vtn_hcp
 
 from argparse import ArgumentParser
 
-import pytorch_lightning as pl # gotta work on this
+import lightning as pl # gotta work on this
+import torchmetrics
 import torch 
 from torch.optim.lr_scheduler import StepLR
 
@@ -25,15 +26,19 @@ class Module(pl.LightningModule):
         self.save_hyperparameters()
         NUM_CLASSES = 29
 
-        if model == "VTN_HCPF": # Should always be
-            self.model = VTNHCPF(NUM_CLASSES, self.hparams.num_heads, self.hparams.num_layers, self.hparams.embed_size,
-                                 self.hparams.sequence_length, self.hparams.cnn,
-                                 self.hparams.freeze_layers,
-                                 self.hparams.dropout, device=self.device)
+        self.model = VTNHCPF(NUM_CLASSES, 
+                             self.hparams.num_heads, 
+                             self.hparams.num_layers, 
+                             self.hparams.embed_size,
+                             self.hparams.sequence_length, 
+                             self.hparams.cnn,
+                             self.hparams.freeze_layers,
+                             self.hparams.dropout, 
+                             device=self.device)
             
-        self.criterion = torch.nn.CrossENtropyLoss()
+        self.criterion = torch.nn.CrossEntropyLoss()
 
-        self.accuracy = pl.metrics.Accuracy()
+        self.accuracy = torchmetrics.Accuracy(task='multiclass', num_classes=29)
 
     def forward(self, x):
         return self.model(x)
@@ -54,12 +59,12 @@ class Module(pl.LightningModule):
         self.log("val_accuracy", self.accuracy(z, y))
         return loss
     
-    def configure_optimisers(self):
+    def configure_optimizers(self):
         optimiser = torch.optim.Adam(self.parameters(), lr=self.hparams.learning_rate,
                                      weight_decay=self.hparams.weight_decay)
         
         return {
-            "optimiser": optimiser,
+            "optimizer": optimiser,
             "lr_scheduler": StepLR(optimiser, step_size=self.hparams.lr_step_size, gamma=0.1),
             "monitor": "val_accuracy"
         }

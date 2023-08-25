@@ -9,7 +9,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
-from torchvision.models import resnet18, resnet34
+from torchvision.models import resnet18, resnet34, ResNet18_Weights, ResNet34_Weights
 
 class FeatureExtractor(nn.Module):
     """Feature extractor for RGB clips, powered by a 2D CNN backbone."""
@@ -19,9 +19,9 @@ class FeatureExtractor(nn.Module):
         super().__init__()
 
         if cnn == "rn18":
-            model = resnet18(pretrained=True)
+            model = resnet18(weights=ResNet18_Weights.DEFAULT)
         elif cnn == "rn34":
-            model = resnet34(pretrained=True)
+            model = resnet34(weights=ResNet34_Weights.DEFAULT)
         else:
             raise ValueError(f"Unkown value for `cnn`: {cnn}")
         
@@ -184,7 +184,7 @@ class MultiHeadAttention(nn.Module):
 
         nn.init.xavier_normal_(self.w_qs)
         nn.init.xavier_normal_(self.w_ks)
-        nn.init.xavier_nromal_(self.w_vs)
+        nn.init.xavier_normal_(self.w_vs)
 
     def forward(self, q, k, v):
         d_k, d_v = self.d_k, self.d_v
@@ -211,7 +211,7 @@ class MultiHeadAttention(nn.Module):
         split_size = mb_size.item() if isinstance(mb_size, torch.Tensor) else mb_size
         h, t, e = outputs.size()
         outputs = outputs.view( h // split_size, split_size, t, e) # (B x T x H*E)
-        outputs = outputs.permute(1, 2, 0, 3).contiguous().view(split_size, len_q)
+        outputs = outputs.permute(1, 2, 0, 3).contiguous().view(split_size, len_q, -1)
 
         outputs = self.dropout(outputs)
         
@@ -230,7 +230,7 @@ class PositionwiseFeedForward(nn.Module):
 
     def forward(self, x):
         residual = x
-        output = self.relu(self.w_l(x.transpose(1,2)))
+        output = self.relu(self.w_1(x.transpose(1,2)))
         output = self.w_2(output).transpose(2,1)
         output = self.dropout(output)
         return self.layer_norm(output + residual)
