@@ -5,3 +5,4 @@ results
 data
 openpose
 src/DeepCascade/ResultsData
+.vscode/

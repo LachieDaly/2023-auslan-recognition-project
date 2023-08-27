@@ -5,27 +5,54 @@
     "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python: Current File",
+            "name": "Python: train.py",
             "type": "python",
             "request": "launch",
-            "program": "${file}",
+            "program": "./src/transformer/train.py",
             "console": "integratedTerminal",
-            "args": ["--log_dir", "./results", 
-                    "--model", "Module",
-                    "--dataset", "handcrop_poseflow",
-                    "--num_workers", "4",
-                    "--data_dir", "./Data/ELAR/avi",
-                    "--sequence_length", "16",
-                    "--temporal_stride", "2",
-                    "--learning_rate", "1e-4",
-                    "--gradient_clip_val", "1",
-                    "--gpus", "1",
-                    "--cnn", "rn34",
-                    "--num_layers", "4",
-                    "--num_heads", "8",
-                    "--batch_size", "4",
-                    "--accumulate_grad_batches", "8"
-                ]
+            "args": [
+                "--log_dir", "./results", 
+                "--model", "Module",
+                "--dataset", "handcrop_poseflow",
+                "--num_workers", "4",
+                "--data_dir", "./Data/ELAR/avi",
+                "--sequence_length", "16",
+                "--temporal_stride", "2",
+                "--learning_rate", "1e-4",
+                "--gradient_clip_val", "1",
+                "--gpus", "1",
+                "--cnn", "rn34",
+                "--num_layers", "4",
+                "--num_heads", "8",
+                "--batch_size", "4",
+                "--accumulate_grad_batches", "8"
+            ]
+        },
+        {
+            "name": "Python: predict.py",
+            "type": "python",
+            "request": "launch",
+            "program": "./src/transformer/predict.py",
+            "console": "integratedTerminal",
+            "args": [
+                "--log_dir", "./results",
+                "--model", "Module",
+                "--dataset", "handcrop_poseflow",
+                "--num_workers", "8",
+                "--data_dir", "./Data/ELAR/avi",
+                "--sequence_length", "16",
+                "--temporal_stride", "2",
+                "--learning_rate", "1e-4",
+                "--gpus", "1",
+                "--cnn", "rn34",
+                "--num_layers", "4",
+                "--num_heads", "8",
+                "--max_epochs", "26",
+                "--checkpoint", "./src/Transformer/results/Module/version_0/checkpoints/epoch=26-step=1944.ckpt",
+                "--submission_template", "./Data/ELAR/avi/predictions_template.csv",
+                "--out", "./src/Transformer/results/predictions.csv",
+                "--batch_size", "4"
+            ]
         }
     ]
 }

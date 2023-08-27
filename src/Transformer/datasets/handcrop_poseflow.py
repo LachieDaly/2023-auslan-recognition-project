@@ -58,23 +58,26 @@ class ElarDataModule(pl.LightningDataModule):
                           pin_memory=True,
                           shuffle=True)
 
-    def val_dataloader(self):
+    def val_dataloader(self, return_path=False):
         transform = Compose(Scale(IMAGE_SIZE * 8 // 7), CenterCrop(IMAGE_SIZE), ToFloatTensor(),
                             PermuteImage(),
                             Normalize(NORM_MEAN_IMGNET, NORM_STD_IMGNET))
         
         self.val_set = ElarDataset(self.data_dir, 
-                                       'train', 
-                                       'val',
-                                       self.data_dir / 'train_val_labels.csv',
-                                       transform,
-                                       self.sequence_length, self.temporal_stride)
+                                   'train', 
+                                   'val',
+                                   self.data_dir / 'train_val_labels.csv',
+                                   transform,
+                                   self.sequence_length,
+                                   self.temporal_stride,
+                                   return_path=True)
         
         return DataLoader(self.val_set, 
                           batch_size=self.
                           batch_size, 
                           num_workers=self.num_workers, 
-                          pin_memory=True)
+                          pin_memory=True                          
+                          )
 
     def test_dataloader(self):
         transform = Compose(Scale(IMAGE_SIZE * 8 // 7), CenterCrop(IMAGE_SIZE), ToFloatTensor(),
@@ -107,12 +110,13 @@ class ElarDataModule(pl.LightningDataModule):
 
 class ElarDataset(Dataset):
     def __init__(self, root_path, job_path, job, label_file_path, transform, sequence_length,
-                 temporal_stride):
+                 temporal_stride, return_path=False):
         self.root_path = Path(root_path)
         self.job_path = job_path
         self.job = job
         self.label_file_path = label_file_path
         self.has_labels = self.label_file_path is not None
+        self.return_path = return_path
         self.transform = transform
         self.sequence_length = sequence_length
         self.temporal_stride = temporal_stride
@@ -246,11 +250,11 @@ class ElarDataset(Dataset):
 
         clip = torch.stack(clip, dim=0)
         poseflow_clip = torch.stack(poseflow_clip, dim=0)
-        if self.has_labels:
+        if not self.return_path:
             return (clip, poseflow_clip), sample['label']
         else:
             # Return sample name instead of label so we know what prediction this is 
-            return (clip, poseflow_clip), sample['path'].split('/')[-1][:-10]
+            return (clip, poseflow_clip), sample['path'].split('\\')[-1][:-4]
 
     def __len__(self):
         return len(self.samples)

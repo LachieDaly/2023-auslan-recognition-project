@@ -46,7 +46,7 @@ if __name__ == '__main__':
 
     submission = dict()
 
-    dataloader = dm.val_dataloader()
+    dataloader = dm.val_dataloader(True)
     with torch.no_grad():
         for i, batch in enumerate(dataloader):
             x, paths = batch
@@ -56,8 +56,7 @@ if __name__ == '__main__':
                 logits = model(x.to(device)).cpu()
 
             predictions = torch.argmax(logits, dim=1)
-
-            for j in range(logits.size()):
+            for j in range(logits.size(0)):
                 submission[paths[j]] = predictions[j].item()
     
     with open(args.submission_template) as stf:
