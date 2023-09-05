@@ -1,6 +1,10 @@
 # Hyperparameters
-MODEL = "VTNHCP"
-DATASET = "handcrop_poseflow"
+# MODEL = "vtnhcpf"
+# DATASET = "handcrop_poseflow"
+MODEL = "vtnhc"
+DATASET = "handcrop"
+# MODEL = "vtnfb"
+# DATASET = "fullbody"
 LEARNING_RATE = 1e-4
 GRADIENT_CLIP_VAL = 1
 CNN = "rn34"

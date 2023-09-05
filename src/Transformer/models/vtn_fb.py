@@ -14,7 +14,7 @@ class MMTensorNorm(nn.Module):
         std = torch.std(x, dim=self.dim).unsqueeze(self.dim)
         return (x - mean) / std
     
-class VTNHCPF(nn.Module):
+class VTNFB(nn.Module):
     def __init__(self, num_classes=29, num_heads=4, num_layers=2, embed_size=512, sequence_length=16, cnn='rn34',
                  freeze_layers=0, dropout=0, **kwargs):
         super().__init__()
@@ -25,37 +25,29 @@ class VTNHCPF(nn.Module):
 
         self.feature_extractor = FeatureExtractor(cnn, embed_size, freeze_layers)
 
-        num_attn_features = 2 * embed_size
+        num_attn_features = embed_size
         self.norm = MMTensorNorm(-1)
-        self.bottle_mm = nn.Linear(106 + num_attn_features, num_attn_features)
 
         self.self_attention_decoder = SelfAttention(num_attn_features, num_attn_features,
                                                     [num_heads] * num_layers,
                                                     self.sequence_length, layer_norm=True)
-    
+        
         self.classifier = LinearClassifier(num_attn_features, num_classes, dropout)
 
 
-    # When done like this it seems so simple :)
-    def forward(self, mm_clip):
-        """Extract the image feature vectors."""
-        rgb_clip, pose_clip = mm_clip
-
-        # Reshape to put both hand crops on the same axis.
+    def forward(self, rgb_clip):
+        # Reshape to put both hand crops on the same axis
         b, t, x, c, h, w = rgb_clip.size()
-        rgb_clip = rgb_clip.view(b, t * x, c, h, w) # help
+        rgb_clip = rgb_clip.view(b, t * x, c, h, w)
         z = self.feature_extractor(rgb_clip)
         # reshape back to extract features of both wrist crops as one feature vector
         z = z.view(b, t, -1)
 
-        zp = torch.cat((z, pose_clip), dim=-1)
-
-        zp = self.norm(zp)
-        zp = self.bottle_mm(zp)
+        zp = self.norm(z)
         zp = torch.nn.functional.relu(zp).clone()
         zp = self.self_attention_decoder(zp)
 
         y = self.classifier(zp)
 
         return y.mean(1)
-    
+

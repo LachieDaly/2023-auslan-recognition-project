@@ -1,0 +1,9 @@
+ $LOG_DIR = ".\\results"
+ $DATA_DIR = ".\\Data\\ELAR\\avi"
+ $DATASET = "handcrop_poseflow"  
+ $PREDICTION_TEMPLATE = ".\\Data\\ELAR\\avi\\predictions_template.csv"
+ $CHECKPOINT_PATH = ".\\src\\Transformer\\results\\Module\\version_0\\checkpoints\\epoch=26-step=1944.ckpt"
+ $LOG_DIR = ".\\src\\Transformer\\results"
+
+python .\src\transformer\predict.py --log_dir $LOG_DIR --model vtnhcpf --dataset $DATASET --num_workers 8 --data_dir $DATA_DIR --sequence_length 16 --temporal_stride 2 --learning_rate 1e-4 --gpus 1 --cnn rn34 --num_layers 4 --num_heads 8 --max_epochs 26 --checkpoint $CHECKPOINT_PATH --submission_template $PREDICTION_TEMPLATE --out predictions.csv 
+--batch_size 4

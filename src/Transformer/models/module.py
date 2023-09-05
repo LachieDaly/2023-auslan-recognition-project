@@ -11,6 +11,8 @@ import torch
 from torch.optim.lr_scheduler import StepLR
 
 from .vtn_hcpf import VTNHCPF
+from .vtn_hc import VTNHC
+from .vtn_fb import VTNFB
 
 def get_model_def():
     return Module
@@ -25,16 +27,37 @@ class Module(pl.LightningModule):
 
         self.save_hyperparameters()
         NUM_CLASSES = 29
-
-        self.model = VTNHCPF(NUM_CLASSES, 
-                             self.hparams.num_heads, 
-                             self.hparams.num_layers, 
-                             self.hparams.embed_size,
-                             self.hparams.sequence_length, 
-                             self.hparams.cnn,
-                             self.hparams.freeze_layers,
-                             self.hparams.dropout, 
-                             device=self.device)
+        
+        if model == 'vtnhcpf':
+            self.model = VTNHCPF(NUM_CLASSES, 
+                                self.hparams.num_heads, 
+                                self.hparams.num_layers, 
+                                self.hparams.embed_size,
+                                self.hparams.sequence_length, 
+                                self.hparams.cnn,
+                                self.hparams.freeze_layers,
+                                self.hparams.dropout, 
+                                device=self.device)
+        elif model == 'vtnhc':
+            self.model = VTNHC(NUM_CLASSES,
+                               self.hparams.num_heads,
+                               self.hparams.num_layers,
+                               self.hparams.embed_size,
+                               self.hparams.sequence_length,
+                               self.hparams.cnn,
+                               self.hparams.freeze_layers,
+                               self.hparams.dropout,
+                               device=self.device)
+        elif model == 'vtnfb':
+            self.model = VTNFB(NUM_CLASSES,
+                               self.hparams.num_heads,
+                               self.hparams.num_layers,
+                               self.hparams.embed_size,
+                               self.hparams.sequence_length,
+                               self.hparams.cnn,
+                               self.hparams.freeze_layers,
+                               self.hparams.dropout,
+                               device=self.device)
             
         self.criterion = torch.nn.CrossEntropyLoss()
 

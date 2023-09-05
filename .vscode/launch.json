@@ -12,8 +12,8 @@
             "console": "integratedTerminal",
             "args": [
                 "--log_dir", "./results", 
-                "--model", "Module",
-                "--dataset", "handcrop_poseflow",
+                "--model", "vtnhc",
+                "--dataset", "handcrop",
                 "--num_workers", "4",
                 "--data_dir", "./Data/ELAR/avi",
                 "--sequence_length", "16",
@@ -36,8 +36,8 @@
             "console": "integratedTerminal",
             "args": [
                 "--log_dir", "./results",
-                "--model", "Module",
-                "--dataset", "handcrop_poseflow",
+                "--model", "vtnhc",
+                "--dataset", "handcrop",
                 "--num_workers", "8",
                 "--data_dir", "./Data/ELAR/avi",
                 "--sequence_length", "16",
