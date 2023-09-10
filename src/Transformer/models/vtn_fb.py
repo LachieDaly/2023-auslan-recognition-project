@@ -37,11 +37,11 @@ class VTNFB(nn.Module):
 
     def forward(self, rgb_clip):
         # Reshape to put both hand crops on the same axis
-        b, t, x, c, h, w = rgb_clip.size()
-        rgb_clip = rgb_clip.view(b, t * x, c, h, w)
+        # b, t, x, c, h, w = rgb_clip.size()
+        # rgb_clip = rgb_clip.view(b, t * x, c, h, w)
         z = self.feature_extractor(rgb_clip)
         # reshape back to extract features of both wrist crops as one feature vector
-        z = z.view(b, t, -1)
+        # z = z.view(b, t, -1)
 
         zp = self.norm(z)
         zp = torch.nn.functional.relu(zp).clone()

@@ -58,7 +58,7 @@ class ElarDataModule(pl.LightningDataModule):
                           pin_memory=True,
                           shuffle=True)
 
-    def val_dataloader(self, return_path=False):
+    def val_dataloader(self, return_path=True):
         transform = Compose(Scale(IMAGE_SIZE * 8 // 7), CenterCrop(IMAGE_SIZE), ToFloatTensor(),
                             PermuteImage(),
                             Normalize(NORM_MEAN_IMGNET, NORM_STD_IMGNET))
@@ -70,14 +70,13 @@ class ElarDataModule(pl.LightningDataModule):
                                    transform,
                                    self.sequence_length,
                                    self.temporal_stride,
-                                   return_path=True)
+                                   return_path=return_path)
         
         return DataLoader(self.val_set, 
                           batch_size=self.
                           batch_size, 
                           num_workers=self.num_workers, 
-                          pin_memory=True                          
-                          )
+                          pin_memory=True)
 
     def test_dataloader(self):
         transform = Compose(Scale(IMAGE_SIZE * 8 // 7), CenterCrop(IMAGE_SIZE), ToFloatTensor(),
@@ -132,7 +131,10 @@ class ElarDataset(Dataset):
         clip = []
         for frame_index in sample['frames']:
             frame = frames[frame_index]
-            clip.append(frame)
+
+            full_body_crop = self.transform(frame.numpy());
+
+            clip.append(full_body_crop)
 
         clip = torch.stack(clip, dim=0)
         if not self.return_path:

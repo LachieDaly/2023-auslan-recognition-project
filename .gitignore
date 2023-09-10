@@ -6,3 +6,4 @@ data
 openpose
 src/DeepCascade/ResultsData
 .vscode/
+*.pth
