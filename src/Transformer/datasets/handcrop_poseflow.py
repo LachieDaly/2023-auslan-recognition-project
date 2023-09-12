@@ -70,7 +70,7 @@ class ElarDataModule(pl.LightningDataModule):
                                    transform,
                                    self.sequence_length,
                                    self.temporal_stride,
-                                   return_path=True)
+                                   return_path=return_path)
         
         return DataLoader(self.val_set, 
                           batch_size=self.

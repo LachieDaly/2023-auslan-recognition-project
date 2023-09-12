@@ -14,7 +14,7 @@ class MMTensor(nn.Module):
         std = torch.std(x, dim=self.dim).unsqueeze(self.dim)
         return (x - mean) / std
     
-class LSTMFB(nn.Module):
+class LSTMHCPF(nn.Module):
     def __init__(self, num_classes=29, embed_size=512, sequence_length=16, cnn='rn34',
                  freeze_layers=0, dropout=0, **kwargs):
         super().__init__()
