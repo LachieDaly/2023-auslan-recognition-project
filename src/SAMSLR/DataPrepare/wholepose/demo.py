@@ -10,12 +10,8 @@ import torch
 import torch.nn.parallel
 import torch.backends.cudnn as cudnn
 import torch.nn.functional as f
-# import torch.optim
-# import torch.utils.data
-# import torch.utils.data.distributed
 import torchvision.transforms as transforms
 from pose_hrnet import get_pose_net
-# import coremltools as ct
 from collections import OrderedDict
 from config import cfg
 from config import update_config

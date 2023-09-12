@@ -3,10 +3,10 @@ CUDNN:
   BENCHMARK: true
   DETERMINISTIC: false
   ENABLED: true
-DATA_DIR: ''
+DATA_DIR: './Data/Elar/avi'
 GPUS: (0,1)
 #,2,3)
-OUTPUT_DIR: 'output'
+OUTPUT_DIR: './Data/Elar/wholepose'
 LOG_DIR: 'log'
 WORKERS: 24
 PRINT_FREQ: 100

@@ -58,7 +58,7 @@ class ElarDataModule(pl.LightningDataModule):
                           pin_memory=True,
                           shuffle=True)
 
-    def val_dataloader(self, return_path=True):
+    def val_dataloader(self, return_path=False):
         transform = Compose(Scale(IMAGE_SIZE * 8 // 7), CenterCrop(IMAGE_SIZE), ToFloatTensor(),
                             PermuteImage(),
                             Normalize(NORM_MEAN_IMGNET, NORM_STD_IMGNET))

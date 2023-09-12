@@ -9,6 +9,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 from torch.nn import functional as F
+from torch.nn import LSTM
 from torchvision.models import resnet18, resnet34, ResNet18_Weights, ResNet34_Weights
 
 class FeatureExtractor(nn.Module):
@@ -88,6 +89,23 @@ class SelfAttention(nn.Module):
             x, attn = layer(x)
             outputs.append(x)
         return x
+    
+
+# LSTM Stuffs
+class LongShortTermMemory(nn.Module):
+    """Process sequences using lstm"""
+
+    def __init__(self, input_size, hidden_size, layer_norm=True):
+        super().__init__()
+
+        self.input_size = input_size
+        self.hidden_size = hidden_size
+        # sequence size needed?
+        self.lstm = LSTM(input_size, hidden_size, dropout=0.1, batch_first=True)
+
+    def forward(self, x):
+        return self.lstm(x)
+
 
 class LinearClassifier(nn.Module):
     def __init__(self, input_size, num_classes, dropout=0):
@@ -103,7 +121,6 @@ class LinearClassifier(nn.Module):
         return self.fc(self.dropout(x))
 
 # Private if we could
-
 
 class Bottle(nn.Module):
     # TODO Learn waht is happening here

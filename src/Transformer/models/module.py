@@ -13,6 +13,7 @@ from torch.optim.lr_scheduler import StepLR
 from .vtn_hcpf import VTNHCPF
 from .vtn_hc import VTNHC
 from .vtn_fb import VTNFB
+from .lstm_fb import LSTMFB
 
 def get_model_def():
     return Module
@@ -58,6 +59,15 @@ class Module(pl.LightningModule):
                                self.hparams.freeze_layers,
                                self.hparams.dropout,
                                device=self.device)
+            
+        elif model == 'lstmfb':
+            self.model = LSTMFB(NUM_CLASSES,
+                                self.hparams.embed_size,
+                                self.hparams.sequence_length,
+                                self.hparams.cnn,
+                                self.hparams.freeze_layers,
+                                self.hparams.dropout,
+                                device=self.device)
             
         self.criterion = torch.nn.CrossEntropyLoss()
 
