@@ -53,6 +53,41 @@
                 "--out", "./src/Transformer/results/predictions.csv",
                 "--batch_size", "4"
             ]
+        },
+        {
+            "name": "Python: wholepose demo",
+            "type": "python",
+            "request": "launch",
+            "program": "./src/SAMSLR/DataPrepare/wholepose/demo.py",
+            "console": "integratedTerminal",
+        },
+        {
+            "name": "Python: wholepose_features_extraction",
+            "type": "python",
+            "request": "launch",
+            "program": "./src/SAMSLR/DataPrepare/feature/wholepose_features_extraction.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Python: gen_frames",
+            "type": "python",
+            "request": "launch",
+            "program": "./src/SAMSLR/DataPrepare/gen_frames.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Conv3D training",
+            "type": "python",
+            "request": "launch",
+            "program": "./src/SAMSLR/Conv3D/Sign_Isolated_Conv3D_clip.py",
+            "console": "integratedTerminal"
+        },
+        {
+            "name": "Gen Frames",
+            "type": "python",
+            "request": "launch",
+            "program": "./src/SAMSLR/DataPrepare/gen_frames.py",
+            "console": "integratedTerminal"
         }
     ]
 }

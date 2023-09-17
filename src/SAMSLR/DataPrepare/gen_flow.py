@@ -25,9 +25,9 @@ def crop(image, center, radius, size=512):
 selected_joints = np.concatenate(([0,1,2,3,4,5,6,7,8,9,10], 
                     [91,95,96,99,100,103,104,107,108,111],[112,116,117,120,121,124,125,128,129,132]), axis=0) 
 
-folder = 'output_file_val' # 'output_file_train', 'output_file_test'
-npy_folder = 'val_npy/npy3' # 'train_npy/npy3', 'test_npy/npy3'
-out_folder = 'val_flow_depth' # 'train_flow_depth', 'test_flow_depth', 'train_flow_color', 'val_flow_color', 'test_flow_color' 
+folder = './Data/ELAR/avi/train' # 'train', 'test'
+npy_folder = './Data/ELAR/npy3/train' # 'train_npy/npy3', 'test_npy/npy3'
+out_folder = './Data/ELAR/sam_flow/train' # 'train_frames' 'test_frames'
 
 
 for o in natsorted(os.listdir(folder)):

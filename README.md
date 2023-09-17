@@ -11,3 +11,4 @@ You can find a version of the following, either written from scratch or modified
 3. Rastgoo's Deep Cascade Model (Flawed)
 4. ChaLearn Transformer Model
 5. SAM-SLR V2
+6. Rastgoo Deep Cascade Model (Improved)

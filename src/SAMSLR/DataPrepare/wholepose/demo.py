@@ -54,24 +54,18 @@ def merge_hm(hms_list):
         hms[1,:,:,:] = torch.flip(hms[1,index_mirror,:,:], [2])
     
     hm = torch.cat(hms_list, dim=0)
-    # print(hm.size(0))
     hm = torch.mean(hms, dim=0)
     return hm
+
 def main():
 
     with torch.no_grad():
-        config = 'wholebody_w48_384x288.yaml'
+        config = './src/SAMSLR/DataPrepare/wholepose/wholebody_w48_384x288.yaml'
         cfg.merge_from_file(config)
 
-        # dump_input = torch.randn(1, 3, 256, 256)
-        # newmodel = PoseHighResolutionNet()
         newmodel = get_pose_net(cfg, is_train=False)
         print(newmodel)
-        # dump_output = newmodel(dump_input)
-        # print(dump_output.size())
-        checkpoint = torch.load('./hrnet_w48_coco_wholebody_384x288-6e061c6a_20200922.pth')
-        # newmodel.load_state_dict(checkpoint['state_dict'])
-
+        checkpoint = torch.load('./src/SAMSLR/DataPrepare/wholepose/hrnet_w48_coco_wholebody_384x288-6e061c6a_20200922.pth')
 
         state_dict = checkpoint['state_dict']
         new_state_dict = OrderedDict()
@@ -90,26 +84,22 @@ def main():
             transforms.Normalize((0.485, 0.456, 0.406), (0.229, 0.224, 0.225))
         ])
 
-        input_path = '/home/ubuntu/workspace/data/sign/val'
+        input_path = './Data/ELAR/avi/train'
         paths = []
         names = []
         for root, _, fnames in natsorted(os.walk(input_path)):
             for fname in natsorted(fnames):     
                 path1 = os.path.join(root, fname) 
-                if 'depth' in fname:
+                if 'depth' in fname or 'nframes' in fname:
                     continue
                 paths.append(path1)
                 names.append(fname)
         print(len(paths))
         step = 600
         start_step = 6
-        paths = paths[4200:]
-        names = names[4200:]
-        paths = paths[::-1]
-        names = names[::-1]
 
         for i, path in enumerate(paths):
-            output_npy = 'npy3/{}.npy'.format(names[i])
+            output_npy = './Data/ELAR/npy3/train/{}.npy'.format(names[i][:-4])
 
             if os.path.exists(output_npy):
                 continue
@@ -127,7 +117,7 @@ def main():
                     print("Ignoring empty camera frame.")
                     # If loading a video, use 'break' instead of 'continue'.
                     break
-                # img = cv2.resize(img, (256,256))
+                img = cv2.resize(img, (512,512))
                 frame_height, frame_width = img.shape[:2]
                 img = cv2.flip(img, flipCode=1)
                 img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
