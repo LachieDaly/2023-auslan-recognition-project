@@ -85,14 +85,9 @@ if __name__ == '__main__':
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=8)
     # Create model
 
-    model = r2plus1d_18(pretrained=True, num_classes=500)
+    model = r2plus1d_18(pretrained=True, num_classes=num_classes)
     # load pretrained
-    checkpoint = torch.load('./src/SAMSLR/pretrained/slr_resnet2d+1.pth')
     new_state_dict = OrderedDict()
-    for k, v in checkpoint.items():
-        name = k[7:] # remove 'module.'
-        new_state_dict[name]=v
-    model.load_state_dict(new_state_dict)
     if phase == 'Train':
         model.fc1 = nn.Linear(model.fc1.in_features, num_classes)
     print(model)
@@ -103,8 +98,8 @@ if __name__ == '__main__':
     #     logger.info("Using {} GPUs".format(torch.cuda.device_count()))
     #     model = nn.DataParallel(model)
     # Create loss criterion & optimizer
-    # criterion = nn.CrossEntropyLoss()
-    criterion = LabelSmoothingCrossEntropy()
+    criterion = nn.CrossEntropyLoss()
+    # criterion = LabelSmoothingCrossEntropy()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10, threshold=0.0001)
 

@@ -2,6 +2,7 @@ import numpy as np
 import torch
 import torch.nn as nn
 import torch.nn.functional as F
+from  torchvision.models.video import R2Plus1D_18_Weights
 from torch.autograd import Variable
 from torch.hub import load_state_dict_from_url
 import torchvision
@@ -34,10 +35,11 @@ class r2plus1d_18(nn.Module):
         super(r2plus1d_18, self).__init__()
         self.pretrained = pretrained
         self.num_classes = num_classes
-        model = torchvision.models.video.r2plus1d_18(pretrained=self.pretrained)
-        # delete the last fc layer
+        if pretrained:
+            model = torchvision.models.video.r2plus1d_18(weights=R2Plus1D_18_Weights.KINETICS400_V1)
+        else:
+            model = torchvision.models.video.r2plus1d_18()
         modules = list(model.children())[:-1]
-        # print(modules)
         self.r2plus1d_18 = nn.Sequential(*modules)
         convert_relu_to_swish(self.r2plus1d_18)
         self.fc1 = nn.Linear(model.fc.in_features, self.num_classes)
