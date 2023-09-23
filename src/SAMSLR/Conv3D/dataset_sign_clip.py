@@ -43,7 +43,9 @@ class Sign_Isolated(Dataset):
         else:
             frame_indices = np.arange(video_length)
             while frame_indices.shape[0] < sample_duration:
-                frame_indices = np.concatenate((frame_indices, np.arange(video_length)), axis=0)
+                # seem to repeat 
+                # frame_indices = np.concatenate((frame_indices, np.arange(video_length)), axis=0)
+                frame_indices = np.concatenate((frame_indices, np.array([video_length - 1])), axis=0)
             frame_indices = frame_indices[:sample_duration] + 1
         assert frame_indices.shape[0] == sample_duration
         return frame_indices
@@ -57,7 +59,8 @@ class Sign_Isolated(Dataset):
         else:
             frame_indices = np.arange(video_length)
             while frame_indices.shape[0] < sample_duration:
-                frame_indices = np.concatenate((frame_indices, np.arange(video_length)), axis=0)
+                # frame_indices = np.concatenate((frame_indices, np.arange(video_length)), axis=0)
+                frame_indices = np.concatenate((frame_indices, np.array([video_length - 1])), axis=0)
             frame_indices = frame_indices[:sample_duration] + 1
 
         return frame_indices

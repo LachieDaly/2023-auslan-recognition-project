@@ -18,7 +18,7 @@ if __name__ == '__main__':
 
     # Path setting
     # Path setting
-    exp_name = 'rgb_final'
+    exp_name = 'rgb_final_last_frame_finetune'
     data_path = "./Data/ELAR/sam_frames_crop/train"
     data_path2 = "./Data/ELAR/sam_frames_crop/train"
     label_train_path = "./Data/ELAR/avi/train_val_labels.csv"
@@ -74,7 +74,7 @@ if __name__ == '__main__':
     # Create model
     model = r2plus1d_18(pretrained=False, num_classes=29)
     # load pretrained
-    checkpoint = torch.load('./src/SAMSLR/checkpoints/rgb_final_100_epoch/sign_resnet2d+1_epoch100.pth')
+    checkpoint = torch.load('./src/SAMSLR/checkpoints/rgb_final_last_frame_finetune/sign_resnet2d+1_epoch063.pth')
     for key in checkpoint:
         print(key)
 

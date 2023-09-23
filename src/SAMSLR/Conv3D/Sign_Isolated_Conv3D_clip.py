@@ -31,7 +31,7 @@ if __name__ == '__main__':
             return loss.mean()
 
     # Path setting
-    exp_name = 'rgb_final'
+    exp_name = 'rgb_repeat_last_frame'
     data_path = "./Data/ELAR/sam_frames_crop/train"
     data_path2 = "./Data/ELAR/sam_frames_crop/train"
     label_train_path = "./Data/ELAR/avi/train_val_labels.csv"
