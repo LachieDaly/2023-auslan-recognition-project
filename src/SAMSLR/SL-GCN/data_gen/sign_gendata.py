@@ -26,14 +26,13 @@ def gendata(data_path, label_path, out_path, part='train', config='27'):
     num_joints = len(selected)
     label_file = open(label_path, 'r', encoding='utf-8')
     
-
     for line in label_file.readlines():
         line = line.strip()
         line = line.split(',')
-
-        sample_names.append(line[0])
-        data.append(os.path.join(data_path, part, line[0] + '.npy'))
-        labels.append(int(line[1]))
+        if line[2] == part:
+            sample_names.append(line[0])
+            data.append(os.path.join(data_path, line[0] + '.npy'))
+            labels.append(int(line[1]))
 
     fp = np.zeros((len(data), max_frame, num_joints, num_channels, max_body_true), dtype=np.float32)
 
@@ -68,12 +67,12 @@ def gendata(data_path, label_path, out_path, part='train', config='27'):
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Sign Data Converter.')
-    parser.add_argument('--data_path', default='./Data/ELAR/npy3') #'train_npy/npy', 'va_npy/npy'
+    parser.add_argument('--data_path', default='./Data/ELAR/npy3/train') #'train_npy/npy', 'va_npy/npy'
     parser.add_argument('--label_path', default='./Data/ELAR/train_val_labels.csv') # 'train_labels.csv', 'val_gt.csv', 'test_labels.csv'
     parser.add_argument('--out_folder', default='./Data/ELAR/sign')
     parser.add_argument('--points', default='27')
 
-    part = 'train' # 'train', 'val'
+    part = 'val' # 'train', 'val'
     arg = parser.parse_args()
 
     out_path = os.path.join(arg.out_folder, arg.points)

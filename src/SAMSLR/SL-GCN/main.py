@@ -65,7 +65,7 @@ def get_parser():
         '--save-score',
         type=str2bool,
         default=False,
-        help='if ture, the classification score will be stored')
+        help='if true, the classification score will be stored')
 
     # visulize and debug
     parser.add_argument(
@@ -103,7 +103,7 @@ def get_parser():
     parser.add_argument(
         '--num-worker',
         type=int,
-        default=32,
+        default=8,
         help='the number of worker for data loader')
     parser.add_argument(
         '--train-feeder-args',
@@ -192,8 +192,8 @@ class Processor():
 
     def __init__(self, arg):
 
-        arg.model_saved_name = "./save_models/" + arg.Experiment_name
-        arg.work_dir = "./work_dir/" + arg.Experiment_name
+        arg.model_saved_name = "./src/SAMSLR/SL-GCN/save_models/" + arg.Experiment_name
+        arg.work_dir = "./src/SAMSLR/SL-GCN/work_dir/" + arg.Experiment_name
         self.arg = arg
         self.save_arg()
         if arg.phase == 'train':
@@ -275,12 +275,12 @@ class Processor():
                 state.update(weights)
                 self.model.load_state_dict(state)
 
-        if type(self.arg.device) is list:
-            if len(self.arg.device) > 1:
-                self.model = nn.DataParallel(
-                    self.model,
-                    device_ids=self.arg.device,
-                    output_device=output_device)
+        # if type(self.arg.device) is list:
+        #     if len(self.arg.device) > 1:
+        #         self.model = nn.DataParallel(
+        #             self.model,
+        #             device_ids=self.arg.device,
+        #             output_device=output_device)
 
     def load_optimizer(self):
         if self.arg.optimizer == 'SGD':
@@ -494,7 +494,7 @@ class Processor():
                     score_dict = dict(
                         zip(self.data_loader[ln].dataset.sample_name, score))
 
-                    with open('./work_dir/' + arg.Experiment_name + '/eval_results/best_acc' + '.pkl'.format(
+                    with open('./src/SAMSLR/SL-GCN/work_dir/' + arg.Experiment_name + '/eval_results/best_acc' + '.pkl'.format(
                             epoch, accuracy), 'wb') as f:
                         pickle.dump(score_dict, f)
 
@@ -509,7 +509,7 @@ class Processor():
                     self.print_log('\tTop{}: {:.2f}%'.format(
                         k, 100 * self.data_loader[ln].dataset.top_k(score, k)))
 
-                with open('./work_dir/' + arg.Experiment_name + '/eval_results/epoch_' + str(epoch) + '_' + str(accuracy) + '.pkl'.format(
+                with open('./src/SAMSLR/SL-GCN/work_dir/' + arg.Experiment_name + '/eval_results/epoch_' + str(epoch) + '_' + str(accuracy) + '.pkl'.format(
                         epoch, accuracy), 'wb') as f:
                     pickle.dump(score_dict, f)
         return np.mean(loss_value)
@@ -573,7 +573,7 @@ if __name__ == '__main__':
     p = parser.parse_args()
     if p.config is not None:
         with open(p.config, 'r') as f:
-            default_arg = yaml.load(f)
+            default_arg = yaml.safe_load(f)
         key = vars(p).keys()
         for k in default_arg.keys():
             if k not in key:

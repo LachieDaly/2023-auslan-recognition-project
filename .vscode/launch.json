@@ -88,6 +88,13 @@
             "request": "launch",
             "program": "./src/SAMSLR/DataPrepare/gen_frames.py",
             "console": "integratedTerminal"
+        },
+        {
+            "name": "Sign Gen Data",
+            "type": "python",
+            "request": "launch",
+            "program": "./src/SAMSLR/SL-GCN/data_gen/sign_gendata.py",
+            "console": "integratedTerminal"
         }
     ]
 }

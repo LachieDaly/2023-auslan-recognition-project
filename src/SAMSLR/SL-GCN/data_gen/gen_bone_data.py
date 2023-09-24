@@ -46,11 +46,11 @@ paris = {
 }
 
 sets = {
-    'train', 'val', 'test'
+    'train', 'val'
 }
 
 datasets = {
-    'sign/27_2'
+    'sign/27'
 }
 
 from tqdm import tqdm
@@ -58,10 +58,10 @@ from tqdm import tqdm
 for dataset in datasets:
     for set in sets:
         print(dataset, set)
-        data = np.load('../data/{}/{}_data_joint.npy'.format(dataset, set))
+        data = np.load('./Data/ELAR/{}/{}_data_joint.npy'.format(dataset, set))
         N, C, T, V, M = data.shape
         fp_sp = open_memmap(
-            '../data/{}/{}_data_bone.npy'.format(dataset, set),
+            './Data/ELAR/{}/{}_data_bone.npy'.format(dataset, set),
             dtype='float32',
             mode='w+',
             shape=(N, 3, T, V, M))

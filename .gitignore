@@ -8,3 +8,5 @@ src/DeepCascade/ResultsData
 .vscode/
 *.pth
 runs*/
+work_dir/
+save_models/
