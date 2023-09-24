@@ -26,19 +26,19 @@ if __name__ == "__main__":
     print("Let's use", torch.cuda.device_count(), "GPUs!")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Define training set
-    train_dataset = TorchDataset(istrain=True, fea_dir=opt.dataset_path, isaug = True, repeat=1)
-    train_dataloader = DataLoader(train_dataset, batch_size=opt.batch_size, shuffle=True, num_workers=32,pin_memory=True)
+    train_dataset = TorchDataset(istrain=True, fea_dir=opt.dataset_path, isaug=True, repeat=1)
+    train_dataloader = DataLoader(train_dataset, batch_size=opt.batch_size, shuffle=True, num_workers=8,pin_memory=True)
 
     # Define test set
     test_dataset = TorchDataset(istrain=False, fea_dir=opt.dataset_path, repeat=1)
-    test_dataloader = DataLoader(test_dataset, batch_size=opt.batch_size, shuffle=False, num_workers=32,pin_memory=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=opt.batch_size, shuffle=False, num_workers=8,pin_memory=True)
 
     # Classification criterion
     #cls_criterion = nn.CrossEntropyLoss().to(device)
     cls_criterion = LabelSmoothingCrossEntropy().cuda()
     # Define network
     model =T_Pose_model(frames_number=60,joints_number=33,
-        n_classes=226
+        n_classes=29
     )
 
     if opt.checkpoint_model:

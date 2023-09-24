@@ -1,10 +1,10 @@
-Experiment_name: sign_bone_final
+Experiment_name: bone_27_finetune
 
 # feeder
 feeder: feeders.feeder.Feeder
 train_feeder_args:
-  data_path: ./data/sign/27_2/train_data_bone.npy
-  label_path: ./data/sign/27_2/train_label.pkl
+  data_path: ./Data/ELAR/sign/27train_val_data_bone2.npy
+  label_path: ./Data/ELAR/sign/27/train_val_labels.pkl
   debug: False
   random_choose: True
   random_shift: True
@@ -15,8 +15,8 @@ train_feeder_args:
   is_vector: True
 
 test_feeder_args:
-  data_path: ./data/sign/27_2/val_data_bone.npy
-  label_path: ./data/sign/27_2/val_gt.pkl
+  data_path: ./Data/ELAR/sign/27/val_data_bone.npy
+  label_path: ./Data/ELAR/sign/27/val_label.pkl
   random_mirror: False
   normalization: True
   is_vector: True
@@ -24,7 +24,7 @@ test_feeder_args:
 # model
 model: model.decouple_gcn_attn.Model
 model_args:
-  num_class: 226
+  num_class: 29
   num_point: 27
   num_person: 1
   graph: graph.sign_27.Graph
@@ -35,15 +35,16 @@ model_args:
 
 #optim
 weight_decay: 0.0001
-base_lr: 0.1
-step: [150, 200]
+base_lr: 0.01
+step: [50]
 
 # training
-device: [4,5,6,7]
+device: [0]
+weights: final_models/27/bone_epoch_239_9470.pt
 keep_rate: 0.9
 only_train_epoch: 1
-batch_size: 64
-test_batch_size: 64
-num_epoch: 250
+batch_size: 32
+test_batch_size: 32
+num_epoch: 100
 nesterov: True
-warm_up_epoch: 20
+warm_up_epoch: 0

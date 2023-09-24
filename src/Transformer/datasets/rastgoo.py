@@ -129,6 +129,7 @@ class ElarDataset(Dataset):
         frames, _, _ = torchvision.io.read_video(sample['path'], pts_unit='sec')
 
         clip = []
+        rastgoo_features = np.zeros((135))
         missing_wrists_left, missing_wrists_right = [], []
         for frame_index in sample['frames']:
             kp_path = os.path.join(sample['path'].replace('avi', 'kp'), '{}_{:012d}_keypoints.json'.format(

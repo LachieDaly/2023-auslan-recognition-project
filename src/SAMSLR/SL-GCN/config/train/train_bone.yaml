@@ -16,7 +16,7 @@ train_feeder_args:
 
 test_feeder_args:
   data_path: ./Data/ELAR/sign/27/val_data_bone.npy
-  label_path: ./Data/ELAR/sign/27/val_gt.pkl
+  label_path: ./Data/ELAR/sign/27/val_label.pkl
   random_mirror: False
   normalization: True
   is_vector: True
