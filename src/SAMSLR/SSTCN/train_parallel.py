@@ -13,24 +13,25 @@ import datetime
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--dataset_path", type=str, default="./data/train_features", help="Path to input dataset")
-    parser.add_argument("--save_path", type=str, default="./model_checkpoints", help="Path to save")
+    parser.add_argument("--dataset_path", type=str, default="./Data/ELAR/skeleton_features/train", help="Path to input dataset")
+    parser.add_argument("--save_path", type=str, default="./src/SAMSLR/SSTCN/save-models", help="Path to save")
     parser.add_argument("--num_epochs", type=int, default=400, help="Number of training epochs")
-    parser.add_argument("--batch_size", type=int, default=60, help="Size of each training batch")
+    parser.add_argument("--batch_size", type=int, default=64, help="Size of each training batch")
     parser.add_argument("--lr", type=float, default=0.001, help="learning rate")
     parser.add_argument("--wd", type=float, default=0.0001, help="weight decay")
     parser.add_argument("--checkpoint_model", type=str, default="", help="Optional path to checkpoint model")
+    label_path = "./Data/ELAR/avi/train_val_labels.csv"
 
     opt = parser.parse_args()
     print(opt)
     print("Let's use", torch.cuda.device_count(), "GPUs!")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     # Define training set
-    train_dataset = TorchDataset(istrain=True, fea_dir=opt.dataset_path, isaug=True, repeat=1)
+    train_dataset = TorchDataset(is_train=True, feature_dir=opt.dataset_path, is_aug=True, repeat=1)
     train_dataloader = DataLoader(train_dataset, batch_size=opt.batch_size, shuffle=True, num_workers=8,pin_memory=True)
 
     # Define test set
-    test_dataset = TorchDataset(istrain=False, fea_dir=opt.dataset_path, repeat=1)
+    test_dataset = TorchDataset(is_train=False, feature_dir=opt.dataset_path, repeat=1)
     test_dataloader = DataLoader(test_dataset, batch_size=opt.batch_size, shuffle=False, num_workers=8,pin_memory=True)
 
     # Classification criterion
