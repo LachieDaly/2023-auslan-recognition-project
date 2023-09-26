@@ -129,7 +129,8 @@ class ElarDataset(Dataset):
         frames, _, _ = torchvision.io.read_video(sample['path'], pts_unit='sec')
 
         clip = []
-        rastgoo_features = np.zeros((135))
+        rastgoo_clip = []
+        slope = 0
         missing_wrists_left, missing_wrists_right = [], []
         for frame_index in sample['frames']:
             kp_path = os.path.join(sample['path'].replace('avi', 'kp'), '{}_{:012d}_keypoints.json'.format(
@@ -188,10 +189,19 @@ class ElarDataset(Dataset):
             else:
                 right_hand_crop = frame[right_hand_ymin:right_hand_ymax, right_hand_xmin:right_hand_xmax, :]
             right_hand_crop = self.transform(right_hand_crop.numpy())
-
+            slopeRise = abs(right_hand_center_y - left_hand_center_y)
+            slopeRun = abs(right_hand_center_x - left_hand_center_x)
+            slope = 0
+            if (slopeRun != 0):
+                slope = slopeRise / slopeRun
+            slope_multiplied = np.full(shape=25, fill_value=slope, dtype="float32")
+            rastgoo_features = np.concatenate((slope_multiplied, keypoints.flatten()))
+            rastgoo_transform = Compose(ToFloatTensor())
+            rastgoo = rastgoo_transform(rastgoo_features)
             crops = torch.stack((left_hand_crop, right_hand_crop), dim=0)
 
             clip.append(crops)
+            rastgoo_clip.append(rastgoo)
 
         # Try to impute hand crops from frames where the elbow and wrist weren't missing as close as possible temporally
         for clip_index in range(len(clip)):
@@ -222,11 +232,12 @@ class ElarDataset(Dataset):
                     clip[clip_index][1] = clip[replacement_index][1]
 
         clip = torch.stack(clip, dim=0)
+        rastgoo_clip = torch.stack(rastgoo_clip, dim=0)
         if not self.return_path:
-            return clip, sample['label']
+            return (clip, rastgoo_clip), sample['label']
         else:
             # Return sample name instead of label so we know what prediction this is 
-            return clip, sample['path'].split('\\')[-1][:-4]
+            return (clip, rastgoo_clip), sample['path'].split('\\')[-1][:-4]
 
     def __len__(self):
         return len(self.samples)

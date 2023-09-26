@@ -19,5 +19,5 @@ cd ..
 ####### training #############################
 python train_parallel.py --batch_size 160
 ###### testing ###########################
-python test.py
+# python test.py
 #python test.py --checkpoint_model model_checkpoints/your model

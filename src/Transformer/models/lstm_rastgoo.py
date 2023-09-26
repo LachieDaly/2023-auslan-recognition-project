@@ -14,7 +14,7 @@ class MMTensor(nn.Module):
         std = torch.std(x, dim=self.dim).unsqueeze(self.dim)
         return (x - mean) / std
     
-class LSTMHCPF(nn.Module):
+class LSTMR(nn.Module):
     def __init__(self, num_classes=29, embed_size=512, sequence_length=16, cnn='rn34',
                  freeze_layers=0, dropout=0, **kwargs):
         super().__init__()
@@ -28,7 +28,7 @@ class LSTMHCPF(nn.Module):
 
         self.norm = MMTensor(-1)
 
-        self.bottle_mm = nn.Linear(106 + num_features, num_features)
+        self.bottle_mm = nn.Linear(295 + num_features, num_features)
 
         self.lstm = LongShortTermMemory(num_features, num_features, True)
 

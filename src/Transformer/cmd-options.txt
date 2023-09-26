@@ -1,6 +1,6 @@
  $LOG_DIR = ".\\results"
  $DATA_DIR = ".\\Data\\ELAR\\avi"
- $DATASET = "fullbody"  
+ $DATASET = "rastgoo"  
  $PREDICTION_TEMPLATE = ".\\Data\\ELAR\\avi\\predictions_template.csv"
  $CHECKPOINT_PATH = ".\\src\\Transformer\\results\\vtnfb\\version_2\\checkpoints\\epoch=22-step=1656.ckpt"
  $LOG_DIR = ".\\src\\Transformer\\results"
@@ -13,3 +13,6 @@ python src\transformer\train.py --log_dir ./results --model vtnhc --dataset hand
 
 -- LSTM FB
 python src\transformer\train.py --log_dir ./src/Transformer/results --model lstmfb --dataset fullbody --num_workers 8 --data_dir ./Data/ELAR/avi --sequence_length 16 --temporal_stride 2 --learning_rate 1e-4 --gradient_clip_val=1 --gpus 1 --cnn rn34 --num_layers 4 --num_heads 8 --batch_size 4 --accumulate_grad_batches 8
+
+-- RASTGOO LSTM
+python src\transformer\train.py --log_dir ./src/Transformer/results --model lstmrast --dataset rastgoo --num_workers 8 --data_dir ./Data/ELAR/avi --sequence_length 16 --temporal_stride 2 --learning_rate 1e-4 --gradient_clip_val=1 --gpus 1 --cnn rn34 --num_layers 4 --num_heads 8 --batch_size 4 --accumulate_grad_batches 8

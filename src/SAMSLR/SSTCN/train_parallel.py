@@ -38,9 +38,7 @@ if __name__ == "__main__":
     #cls_criterion = nn.CrossEntropyLoss().to(device)
     cls_criterion = LabelSmoothingCrossEntropy().cuda()
     # Define network
-    model =T_Pose_model(frames_number=60,joints_number=33,
-        n_classes=29
-    )
+    model = T_Pose_model(frames_number=60,joints_number=33, n_classes=29)
 
     if opt.checkpoint_model:
         model.load_state_dict(torch.load(opt.checkpoint_model,map_location='cuda:0'))
@@ -53,7 +51,7 @@ if __name__ == "__main__":
     #model = model.module
     optimizer = torch.optim.Adam(model.parameters(), lr=opt.lr, weight_decay=opt.wd)
 
-    def test_model(epoch,global_acc1,needsave1):
+    def test_model(epoch, global_acc1, needsave1):
         """ Evaluate the model on the test set """
         print("")
         model.eval()
@@ -154,13 +152,10 @@ if __name__ == "__main__":
         # Evaluate the model on the test set
         newacc = test_model(epoch,global_acc,needsave)
         
-        
         # Save model checkpoint
-        if global_acc<newacc:#epoch % opt.checkpoint_interval == 0:
+        if global_acc < newacc:#epoch % opt.checkpoint_interval == 0:
             os.makedirs(opt.save_path, exist_ok=True)
-            torch.save(model.module.state_dict(), f"{opt.save_path}/T_Pose_model_{epoch}_{newacc}.pth")
-            sys.stdout.write(
-                "save model at %f"
-                % (newacc)
-            )
+            save_path = f"{opt.save_path}/T_Pose_model_{epoch}_{newacc}.pth"
+            torch.save(model.state_dict(), save_path)
+            sys.stdout.write("save model at %f" % (newacc))
             global_acc = newacc
