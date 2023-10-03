@@ -46,7 +46,8 @@ start_time = time.time()
 
 def crop_center_square(frame):
     """
-    
+    Crops a rectangular frame into a square
+    for 
     """
     y, x = frame.shape[0:2]
     min_dim = min(y, x)
@@ -55,7 +56,11 @@ def crop_center_square(frame):
     return frame[start_y : start_y + min_dim, start_x : start_x + min_dim]
 
 def load_video(path, max_frames=0):
-
+    """
+    Load the video at a given path and return the frames in a numpy array
+    only up to max_frames images are taken. If a video is less than max_frames
+    fill up to max_frames with the last frame in the video
+    """
     cap = cv2.VideoCapture(path)
     frames = []
     try:

@@ -43,7 +43,8 @@ class TorchDataset(Dataset):
         for line in label_file.readlines():
             line = line.strip()
             line = line.split(',')
-
+            # We're storing training and validation in the same area
+            # need to differentiate with the csv
             if line[2] == "train" and self.is_train:
                 name = line[0] + '.pt'
                 label = int(line[1])
@@ -58,10 +59,10 @@ class TorchDataset(Dataset):
     def load_data(self, path):
         data = torch.load(path, map_location='cpu')
         if self.is_aug:
-            data = data.view(60,-1,24,24)
-            judge = random.randint(0,12)
+            data = data.view(60, -1, 24, 24)
+            judge = random.randint(0, 12)
 ############## aug on frames ##########################################
-            slist = range(0,60)
+            slist = range(0, 60)
             if judge > 7.5 and judge < 11.5:
                 rlength = 60 - random.randint(1,29)
                 rindex = random.sample(range(0,60),rlength)
@@ -69,22 +70,22 @@ class TorchDataset(Dataset):
                 final_list = sorted([*rindex, *extlist])
                 slist = np.array(final_list)
 
-            if judge >2.5 and judge <3.5:
-                rlength = 60 - random.randint(31,45)
-                repeatnum =int (60/rlength)
-                extension = 60 - rlength*repeatnum
-                rindex = random.sample(range(0,60),rlength)
-                extlist = random.sample(rindex,extension)
-                rindex = list(np.repeat(np.array(rindex),repeatnum))
+            if judge > 2.5 and judge < 3.5:
+                rlength = 60 - random.randint(31, 45)
+                repeatnum = int(60 / rlength)
+                extension = 60 - rlength * repeatnum
+                rindex = random.sample(range(0, 60), rlength)
+                extlist = random.sample(rindex, extension)
+                rindex = list(np.repeat(np.array(rindex), repeatnum))
                 final_list = sorted([*rindex, *extlist])
                 slist = np.array(final_list)
             slist = list(slist)
 ##########################################################################
             if self.is_train:
-                data = data[slist,:,:,:]
-                data = data.view(-1,24,24)
+                data = data[slist, :, :, :]
+                data = data.view(-1, 24, 24)
             else:
-                data = data.view(-1,24,24)
+                data = data.view(-1, 24, 24)
         else:
-            data = data.view(-1,24,24)
+            data = data.view(-1, 24, 24)
         return data

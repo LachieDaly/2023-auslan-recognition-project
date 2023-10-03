@@ -9,6 +9,10 @@ import os
 import torchvision
 
 def main(args):
+    """
+    For each video in the directory count the number of frames in the video
+    and put the count in a text file with the same video name 
+    """
     for dataset in ["train", "val", "test"]:
         videos = glob.glob(os.path.join(args.input_dir, dataset, '*/*.avi'))
         for video_file in videos:

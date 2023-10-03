@@ -10,6 +10,7 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import confusion_matrix
 from tensorflow import keras
 
+"""Sequence model training for masekd image"""
 
 IMG_SIZE = 224
 MAX_SEQ_LENGTH = 20

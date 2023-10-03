@@ -1,6 +1,3 @@
-import json
-import math
-import os
 from argparse import ArgumentParser
 
 import numpy as np
@@ -15,13 +12,13 @@ from .transforms import Compose, Scale, MultiScaleCrop, ToFloatTensor, PermuteIm
 
 from pathlib import Path
 
-_DATA_DIR_LOCAL = './Data/ELAR/avi'# it has got to change
+_DATA_DIR_LOCAL = './Data/ELAR/avi'
 
 SHOULDER_DIST_EPSILON = 1.2
 WRIST_DELTA = 0.15
 
 def get_datamodule_def():
-    return ElarDataModule # we can definitely modify this morning
+    return ElarDataModule
 
 
 def get_datamodule(**kwargs):
@@ -29,6 +26,9 @@ def get_datamodule(**kwargs):
 
 
 class ElarDataModule(pl.LightningDataModule):
+    """
+    Our ELAR DataSet Lightning Data Module
+    """
     def __init__(self, data_dir=_DATA_DIR_LOCAL, batch_size=16, num_workers=0, sequence_length=16,
                  temporal_stride=1, **kwargs):
         super().__init__()
@@ -108,6 +108,9 @@ class ElarDataModule(pl.LightningDataModule):
 
 
 class ElarDataset(Dataset):
+    """
+    Our representation of the ELAR dataset with fullbody images
+    """
     def __init__(self, root_path, job_path, job, label_file_path, transform, sequence_length,
                  temporal_stride, return_path=False):
         self.root_path = Path(root_path)

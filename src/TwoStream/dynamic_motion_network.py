@@ -30,6 +30,9 @@ from lstm_model import lstm_build
 def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:keras.Model, classes_object: VideoClasses,
     batch_size:int=16, num_epochs:int=1, learning_rate:float=1e-4, exp_full_path=None, val_available=True, csv_file=False, 
     train_path=None, val_path=None, test_path=None, video_set=None, feature=None, load_model=False, saved_model=None):
+    """
+    The training code given a model and appropriate parameters
+    """
     if csv_file:
         print('===============================================')
         train_df = pd.read_csv(train_path)
@@ -39,12 +42,9 @@ def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:
         labels = train_data.path.apply(lambda s: s.split("/")[-2])
 
         if test_path == None:
-            train_data, test_samples_df = train_data, labels #train_test_split(train_data, labels, test_size=0.0, random_state=42, stratify=labels)
+            train_data, test_samples_df = train_data, labels 
             train_data.reset_index(drop=True, inplace=True)
             labels = train_data.path.apply(lambda s: s.split("/")[-2])
-
-            #test_samples_df.reset_index(drop=True, inplace=True)
-            #labels_test = pd.get_dummies(test_samples_df.path.apply(lambda s: s.split("/")[-2]).to_numpy().astype(int)).to_numpy()
         else:
             test_data = pd.read_csv(test_path,names=['index','cat','path','frame_count','signerID'],header=None)
             test_samples_df = test_data.path.to_frame()
@@ -101,7 +101,7 @@ def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:
         es = 0
     else:    
         hist = model.fit(
-        gen_features_train,
+            gen_features_train,
             validation_data = gen_features_val,
             epochs = num_epochs,
             workers = 1, #4,                 
@@ -109,11 +109,7 @@ def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:
             verbose = 1, 
             callbacks=[csv_logger, time_callback, best_checkpoint, early_stopper]) 
         
-        #Y_pred = model.predict_generator(gen_features_test)
-        #y_pred = np.argmax(Y_pred, axis=1)
         model = tf.keras.models.load_model(model_dir + "/model-best.h5")
-        # time_info = time_callback.times
-        # saveModelTimes(time_info, exp_full_path)
         es = early_stopper.stopped_epoch
         writeResults(hist, exp_full_path, 0)
         visualizeHis(hist, exp_full_path, 0)
@@ -124,6 +120,9 @@ def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:
     return
 
 def saveModelTimes(time_info, exp_path):
+    """
+    Writes the model times to a csv file
+    """
     # Print and save model times
     print('Total time:')
     print(np.sum(time_info))
@@ -132,8 +131,10 @@ def saveModelTimes(time_info, exp_path):
 def writecsv_file(data, file_name, path_name):
     pd.DataFrame(data).to_csv(os.path.join(path_name,file_name), sep=',')
 
-
 def writeResults(hist, exp_path, use_batch=0):
+    """
+    Writes the results to a csv file
+    """
     train_loss=hist.history['loss']
     val_loss=hist.history['val_loss']
     train_acc=hist.history['accuracy']
@@ -143,12 +144,14 @@ def writeResults(hist, exp_path, use_batch=0):
 
 
 def test(rm, es, main_exp_folder, load_to_memory, class_limit, test_generator=None, X_test=None, y_test=None):
+    """
+    Test the model with any prepared testing data
+    """
     if load_to_memory:
         #use X_test, y_test
         loss, acc = rm.evaluate(X_test, y_test, verbose=0)
     else:
         loss, acc = rm.evaluate_generator(test_generator, verbose=0)
-        #loss, acc = rm.evaluate(X_test, y_test, verbose=0)
     
     print('\nTesting loss: {}, acc: {}\n'.format(loss, acc))
     
@@ -168,6 +171,9 @@ def test(rm, es, main_exp_folder, load_to_memory, class_limit, test_generator=No
         print_confusion_matrix(X_test, y_test, class_limit, y_pred, main_exp_folder)
 
 def print_confusion_matrix(X_test, y_test, numb_classes, y_pred, main_exp_folder):
+    """
+    Prints the confusion matrix
+    """
     cm = confusion_matrix(y_test.argmax(axis=1), y_pred)
     print('Confusion Matrix: ', cm.shape)
     file_name=os.path.join(main_exp_folder,'CM.csv')
@@ -191,6 +197,9 @@ def print_confusion_matrix(X_test, y_test, numb_classes, y_pred, main_exp_folder
     pd.DataFrame(df).to_csv(os.path.join(main_exp_folder, 'ResultMetrics.csv'), sep=',')
 
 def visualizeHis(hist, experiment_name, use_batch):
+    """
+    Plot the model history
+    """
     train_loss=hist.history['loss']
     val_loss=hist.history['val_loss']
     train_acc=hist.history['accuracy']
@@ -227,7 +236,9 @@ def visualizeHis(hist, experiment_name, use_batch):
 def train_model_lstm(video_set, feature, exp_full_path=None, exp_path=None, val_available=None,
 			folder=None, class_file = None, video_dir=None, image_dir = None, image_feature_dir=None, o_flow_dir=None, 
 			o_flow_feature_dir=None, csv_file=False, train_path=None, val_path=None, test_path=None, load_model=False, saved_model=None):
-
+    """
+    Trains the dynamic motion network
+    """
     if os.path.exists(exp_full_path) == False:
         os.mkdir(exp_full_path, 0o755)
 
@@ -240,10 +251,13 @@ def train_model_lstm(video_set, feature, exp_full_path=None, exp_path=None, val_
     classes_object = VideoClasses(class_file)
 
     # Image: Load and train the model
-        
-    log_path = os.path.join(exp_full_path, time.strftime("%Y%m%d-%H%M", time.gmtime()) + "-%s%03d-image-mobile-lstm.csv"%(video_set["name"], video_set["classes"]))
+    log_path = os.path.join(exp_full_path, 
+                            time.strftime("%Y%m%d-%H%M", time.gmtime()) + "-%s%03d-image-mobile-lstm.csv"%(video_set["name"], video_set["classes"]))
     print("Image log: %s" % log_path)
-    modelImage = lstm_build(video_set["frames_norm"], feature["output_shape"][0], classes_object._classes_count, dropout = 0.5, model_name=feature["name"])
+
+    modelImage = lstm_build(video_set["frames_norm"], feature["output_shape"][0], classes_object._classes_count, 
+                            dropout=0.5, model_name=feature["name"])
+    
     train_feature_generator(image_feature_dir, model_dir, log_path, modelImage, classes_object,
         batch_size=32, num_epochs=100, learning_rate=1e-4, exp_full_path=exp_full_path, val_available=val_available,
         csv_file=csv_file,train_path=train_path,  val_path=val_path, test_path=test_path, video_set=video_set, 
@@ -265,14 +279,6 @@ if __name__ == '__main__':
         # "transformer":False,
         "reshape_input": False
     }  #True: if the raw input is different from the requested shape for the model
-	
-	
-    # feature = {
-    #     "name" : "Xception",
-    #     "input_shape" : (299, 299, 3),
-    #     "output" : 2048,
-    #     "output_shape" : (2048, )
-    # }
 
     feature = {
         "name" : "mobilenet",
@@ -287,4 +293,5 @@ if __name__ == '__main__':
     exp_full_path = os.path.join(os.getcwd(), "results", exp_path)
     image_dir = './Data/images/'
 
-    train_model_lstm(video_set, feature, exp_full_path, exp_path, None, None, class_file_all, None, None, image_dir, None, None, True, train_path, None, None, False, None)
+    train_model_lstm(video_set, feature, exp_full_path, exp_path, None, None, class_file_all, 
+                     None, None, image_dir, None, None, True, train_path, None, None, False, None)

@@ -11,7 +11,6 @@ import mediapipe as mp
 import matplotlib.pyplot as plt
 import time
 
-
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
 mp_hands = mp.solutions.hands
@@ -21,6 +20,8 @@ from sklearn.metrics import confusion_matrix
 from tensorflow import keras
 
 from collections import defaultdict
+
+"""Feature extraction and sequence model training in same file"""
 
 IMG_SIZE = 224
 MAX_SEQ_LENGTH = 20

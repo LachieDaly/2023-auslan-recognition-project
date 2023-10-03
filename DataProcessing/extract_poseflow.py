@@ -8,14 +8,23 @@ from collections import defaultdict
 import numpy as np
 
 def read_pose(kp_file):
+    """
+    Reads the json results of OpenPoseDemo and extracts the x, y coordinates of each keypoint
+    Each index of the list is associated with its actual keypoint value
+    Confidence values are removed
+    """
     with open(kp_file) as kf:
         value = json.loads(kf.read())
         kps = value['people'][0]['pose_keypoints_2d']
+        # Extract just x y values, leave behind confidence values
         x = kps[0::3]
         y = kps[1::3]
         return np.stack((x, y), axis=1)
     
 def calc_pose_flow(prev, next):
+    """
+    Calculate the pose flow of each keypoint between frames
+    """
     result = np.zeros_like(prev)
     for kpi in range(prev.shape[0]):
         if np.count_nonzero(prev[kpi]) == 0 or np.count_nonzero(next[kpi]) == 0:
@@ -75,6 +84,9 @@ def normalise(poses):
     return poses
 
 def main(args):
+    """
+    Convert all collected keypoints in a particular directory to their poseflow representation
+    """
     input_dirs = sorted(glob.glob(os.path.join(args.input_dir, "*", "*.kp")))
     input_dir_index = 0
     total = len(input_dirs)

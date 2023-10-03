@@ -45,6 +45,9 @@ start_time = time.time()
 
 # Utility functions taken from https://www.tensorflow.org/hub/tutorials/action_recognition_with_tf_hub
 def crop_center_square(frame):
+    """
+    Takes as input a frame, and crops it such that it becomes a square shape
+    """
     y, x = frame.shape[0:2]
     min_dim = min(y, x)
     start_x = (x // 2) - (min_dim // 2)
@@ -55,6 +58,9 @@ def crop_center_square(frame):
 # Utility functions taken from https://www.tensorflow.org/hub/tutorials/action_recognition_with_tf_hub
 # Somewhat modified
 def load_video(path, max_frames=0):
+    """
+    Loads a video from a given path into a numpy array
+    """
     cap = cv2.VideoCapture(path)
     frames = []
     try:
@@ -83,6 +89,9 @@ def load_video(path, max_frames=0):
 # Utility functions taken from https://www.tensorflow.org/hub/tutorials/action_recognition_with_tf_hub
 # Somewhat modified with new extractor
 def build_feature_extractor():
+    """
+    Returns a CNN model for feature extraction
+    """
     feature_extractor = keras.applications.vgg16.VGG16(
         weights="imagenet",
         include_top=False,
@@ -107,21 +116,33 @@ label_processor = keras.layers.StringLookup(
 print(label_processor.get_vocabulary())
 
 def calculate_width_and_height(border_box):
+    """
+    Calculates the width and height of a provided border box
+    """
     width = border_box[2] - border_box[0]
     height = border_box[3] - border_box[1]
     return width, height
 
 def calculate_orientation(width, height):
+    """
+    returns 1D np array filled with orientation value
+    returns 1 if width is greater than height
+    returns -1 if width is less than height
+    returns 0 otherwise
+    based on rastgoos 
+    """
     value = 0
     if width > height:
         value = 1
     elif height > width:
         value = -1
 
-    # print(value)
     return np.full(shape=25, fill_value=value, dtype='int')
 
 def calculate_slope_orientation(left_border_box, right_border_box):
+    """
+    Returns 1D array of 75 values describing slope and orientation of hands
+    """
     eshr_features = np.zeros(
         shape=(ESHR_FEATURES), dtype="float32"
     )
@@ -143,6 +164,9 @@ def calculate_slope_orientation(left_border_box, right_border_box):
 
 
 def flatten_key_points(hand_landmarks):
+    """
+    Flattens the hand keypoints provided by hands mediapipe
+    """
     # Hand have 63 features total
     hand_features = np.zeros(shape=(63), dtype="float32")
 
@@ -172,6 +196,9 @@ def flatten_key_points(hand_landmarks):
     return hand_features, np.array([x_min, y_min, x_max, y_max])
 
 def extract_eshr_features(left_border_box, right_border_box, image):
+    """
+    Extracts hand features and input image based on the supplied border boxes
+    """
     mask = np.zeros(
         shape=(image.shape[:2]), dtype=np.uint8
     )
@@ -193,6 +220,9 @@ def extract_eshr_features(left_border_box, right_border_box, image):
     return output_image, eshr_features
 
 def mediapipe_extraction(frame, prev_left_keypoints, prev_right_keypoints, left_border_box, right_border_box):
+    """
+    Runs images through mediapipe for extracting features
+    """
     mediapipe_features = np.zeros(
         shape=(MEDIAPIPE_FEATURES + ESHR_FEATURES), dtype="float32"
     )
@@ -250,7 +280,9 @@ def mediapipe_extraction(frame, prev_left_keypoints, prev_right_keypoints, left_
 
 
 def extract_features(frame, prev_left_keypoints, prev_right_keypoints, left_border_box, right_border_box):
-    # Create feature array
+    """
+    Extracts mediapipe and cnn features
+    """
     features = np.zeros(
         shape=(TOTAL_FEATURES), 
         dtype="float32"
@@ -262,8 +294,9 @@ def extract_features(frame, prev_left_keypoints, prev_right_keypoints, left_bord
     return features, left_border_box, right_border_box
 
 def prepare_all_videos(df, root_dir):
-    # cv2.namedWindow("Hands")
-    # cv2.namedWindow("Full")
+    """
+    Gathers all videos and extracts features and labels
+    """
     num_samples = len(df)
     video_paths = df["video_name"].values.tolist()
     labels = df["tag"].values
@@ -317,6 +350,7 @@ def prepare_all_videos(df, root_dir):
     return frame_features, labels
 
 
+# Save prepared data
 data, labels = prepare_all_videos(df, "C:/Users/Lachie/Desktop/Reconstructed")
 np.save('./recognition-before-resize/data.npy', data, allow_pickle=True)
 # np.save('./recognition-before-resize/train_masks.npy', data[1], allow_pickle=True)

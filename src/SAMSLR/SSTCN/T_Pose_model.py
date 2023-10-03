@@ -6,7 +6,6 @@ import torch.nn.functional as F
 # groups == joints_number
 def channel_shuffle(x, groups):
     batchsize, num_channels, height, width = x.data.size()
-
     channels_per_group = num_channels // groups
     
     # reshape
@@ -76,10 +75,7 @@ def conv3x3(in_channels, out_channels, groups=1,stride=1):
 def get_inplanes():
     return [64, 128, 256, 512]
 
-
-
 class TemporalDownsampleBlock(nn.Module):
-
     def __init__(self, in_planes, planes,joints_number,mid, relu = True, stride=1, downsample=None):
         super().__init__()
         # in_planes and planes are both n*joints_number, n is integer
@@ -91,10 +87,10 @@ class TemporalDownsampleBlock(nn.Module):
             mid,
             batch_norm=True,
             relu=relu
-            )
+        )
+
     def _make_grouped_conv1x1(self, in_channels, out_channels, groups, mid,
         batch_norm=True, relu=False):
-
         modules = OrderedDict()
         attention = Attention(in_channels, mid, groups=groups)
         modules['attention'] = attention
@@ -109,13 +105,11 @@ class TemporalDownsampleBlock(nn.Module):
             return nn.Sequential(modules)
         else:
             return conv
-            
 
     def forward(self, x):
         out = self.g_conv_1x1_compress(x)
         return out
         
-
 class FrameDownsampleBlock(nn.Module):
 
     def __init__(self, in_planes, planes, frames,mid, relu = True, stride=1, downsample=None):
@@ -131,7 +125,7 @@ class FrameDownsampleBlock(nn.Module):
             stride,
             batch_norm=True,
             relu=relu
-            )
+        )
 
     def _make_grouped_conv3x3(self, in_channels, out_channels, groups, mid, stride,
         batch_norm=True, relu=False):
@@ -146,18 +140,14 @@ class FrameDownsampleBlock(nn.Module):
             modules['batch_norm'] = nn.BatchNorm2d(out_channels)
         if relu:
             modules['swish'] = swish()
-            #modules['relu'] = nn.ReLU()
         if len(modules) > 1:
             return nn.Sequential(modules)
         else:
             return conv
             
-
-
     def forward(self, x):
         out = self.g_conv_3x3_compress(x)
         return out
-
 
 class T_Pose_model(nn.Module):
 
@@ -167,39 +157,65 @@ class T_Pose_model(nn.Module):
         self.joints_number = joints_number
         self.final_frames_number = frames_number
 
-        self.bn = nn.BatchNorm2d(self.in_channels*self.joints_number)
+        self.bn = nn.BatchNorm2d(self.in_channels * self.joints_number)
+
         self.swish = swish()
-        self.t1downsample = TemporalDownsampleBlock(self.in_channels,frames_number,1,10)
-        self.t2downsample = TemporalDownsampleBlock(frames_number,self.final_frames_number,1,10,relu = False)
-        self.f1downsample = FrameDownsampleBlock(self.final_frames_number*joints_number,
-        self.final_frames_number*joints_number,joints_number,joints_number*10)
-        self.f2downsample = FrameDownsampleBlock(self.final_frames_number*joints_number,
-        self.final_frames_number*joints_number,joints_number,joints_number*10,relu = False)
-        self.f3downsample = FrameDownsampleBlock(self.final_frames_number*joints_number,
-        self.final_frames_number*joints_number,self.final_frames_number,self.final_frames_number*10)
-        self.f4downsample = FrameDownsampleBlock(self.final_frames_number*joints_number,
-        self.final_frames_number*joints_number,self.final_frames_number,self.final_frames_number*10, relu = False)
-        self.f5downsample = FrameDownsampleBlock(self.final_frames_number*joints_number,
-        self.final_frames_number*joints_number,1,10*10)
-        self.f6downsample = FrameDownsampleBlock(self.final_frames_number*joints_number,30*joints_number,1,10*10)
+
+        self.t1downsample = TemporalDownsampleBlock(self.in_channels, 
+                                                    frames_number, 1, 10)
+        self.t2downsample = TemporalDownsampleBlock(frames_number, self.final_frames_number, 
+                                                    1, 10, 
+                                                    relu=False)
+
+        self.f1downsample = FrameDownsampleBlock(self.final_frames_number * joints_number,
+                                                 self.final_frames_number * joints_number,
+                                                 joints_number,joints_number * 10)
+
+        self.f2downsample = FrameDownsampleBlock(self.final_frames_number * joints_number,
+                                                 self.final_frames_number*joints_number,
+                                                 joints_number,joints_number * 10,
+                                                 relu=False)
+
+        self.f3downsample = FrameDownsampleBlock(self.final_frames_number * joints_number,
+                                                 self.final_frames_number * joints_number, 
+                                                 self.final_frames_number, 
+                                                 self.final_frames_number * 10)
+
+        self.f4downsample = FrameDownsampleBlock(self.final_frames_number * joints_number,
+                                                 self.final_frames_number * joints_number, 
+                                                 self.final_frames_number, 
+                                                 self.final_frames_number * 10, 
+                                                 relu=False)
+
+        self.f5downsample = FrameDownsampleBlock(self.final_frames_number * joints_number,
+                                                 self.final_frames_number * joints_number, 
+                                                 1, 10 * 10)
+
+        self.f6downsample = FrameDownsampleBlock(self.final_frames_number * joints_number, 
+                                                 30 * joints_number, 
+                                                 1, 10 * 10)
         self.dropout = nn.Dropout2d(0.333)
+
         self.fc1 = nn.Linear(990, n_classes)
+
     def forward(self, x):
-        batchsize,num_channels, height, width = x.data.size()
+        batchsize, num_channels, height, width = x.data.size()
         x = self.bn(x)
         x = self.swish(x)
         res = x
-        x = x.view(-1,self.in_channels,self.joints_number*height,width)
+        x = x.view(-1, self.in_channels, self.joints_number * height,width)
         x = self.t1downsample(x)
         x = self.t2downsample(x)
         x = x.view(-1,self.final_frames_number*self.joints_number,height,width)
         x = res + x
         x = self.swish(x)
         res = x
+
         x = channel_shuffle(x,self.final_frames_number)
         x = self.f1downsample(x)
         x = self.dropout(x)
         x = self.f2downsample(x)
+
         x = channel_shuffle(x,self.joints_number)
         x = x + res
         x = self.swish(x)
@@ -219,11 +235,9 @@ class T_Pose_model(nn.Module):
         return x
 
     def init_weights(self):
-
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
-                nn.init.kaiming_normal_(m.weight, mode='fan_out')#, nonlinearity='relu')
-                #nn.init.normal_(m.weight, std=0.001)
+                nn.init.kaiming_normal_(m.weight, mode='fan_out')
                 for name, _ in m.named_parameters():
                     if name in ['bias']:
                         nn.init.constant_(m.bias, 0)
@@ -242,6 +256,9 @@ class T_Pose_model(nn.Module):
                 m.bias.data.zero_()
 
 class LabelSmoothingCrossEntropy(nn.Module):
+    """
+    This label smoothing should be imported because its used so much
+    """
     def __init__(self):
         super(LabelSmoothingCrossEntropy, self).__init__()
     def forward(self, x, target, smoothing=0.1):

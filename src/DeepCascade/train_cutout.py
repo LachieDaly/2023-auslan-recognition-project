@@ -10,7 +10,6 @@ from sklearn.model_selection import StratifiedKFold
 from sklearn.metrics import confusion_matrix
 from tensorflow import keras
 
-
 IMG_SIZE = 224
 MAX_SEQ_LENGTH = 20
 CNN_FEATURES = 512

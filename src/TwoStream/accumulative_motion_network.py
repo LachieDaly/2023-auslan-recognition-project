@@ -28,7 +28,10 @@ from keras.callbacks import EarlyStopping, History
 
 
 def write_results(hist, expPath,  useBatch=0):
-    
+    """
+    Writes the results of the given history object
+    to a csv in the provided path
+    """
     train_loss=hist.history['loss']
     val_loss=hist.history['val_loss']
     train_acc=hist.history['accuracy']
@@ -38,16 +41,23 @@ def write_results(hist, expPath,  useBatch=0):
 
 
 def saveModelTimes(timeInfo, expPath):
-    # Print and save model times
+    """
+    Print and save time info to provided path
+    """
     print('Total time:')
     print(np.sum(timeInfo))
     writeCSVFile(timeInfo , 'model_times.csv', expPath)
 
 def writeCSVFile(data, fileName, pathName):
+    """
+    Write data to path / filename with data
+    """
     pd.DataFrame(data).to_csv(os.path.join(pathName,fileName), sep=',')
 
 def visualise_hist(hist, experiment_name, useBatch=0):
-    # visualizing losses and accuracy
+    """
+    Plot the model history information
+    """
 
     train_loss=hist.history['loss']
     val_loss=hist.history['val_loss']
@@ -68,8 +78,6 @@ def visualise_hist(hist, experiment_name, useBatch=0):
     plt.savefig(experiment_name +'/loss.png')
     if useBatch == 1:
         plt.show()
-    #print plt.style.available # use bmh, classic,ggplot for big pictures
-    #plt.style.use(['classic'])
 
     plt.figure(4)
     plt.plot(xc,train_acc)
@@ -85,6 +93,10 @@ def visualise_hist(hist, experiment_name, useBatch=0):
         plt.show()
 
 def print_confusion_matrix(y_test, numb_classes, y_pred, main_exp_folder):
+    """
+    Print the confusion matrix given a list of actual and predicted values
+    Save confusion matrix to experiment folder
+    """
     confusionMatrix = confusion_matrix(y_test, y_pred)
     print('Confusion Matrix: ', confusionMatrix.shape)
     filename =os.path.join(main_exp_folder,'CM.csv')
@@ -109,15 +121,17 @@ def print_confusion_matrix(y_test, numb_classes, y_pred, main_exp_folder):
 
 
 def pretrained_model(img_size, model_name, retrainModel=False, dataFormat='folder'):
-
+    """
+    return a compiled feature extraction model
+    """
     input_img = tf.keras.layers.Input(shape=(img_size, img_size, 3))
-    print("Input imgage")
+    print("Input image")
     print(input_img)
     if model_name == 'mobileNet':
         input_img = preprocess_input(input_img)
-        model_cnn = tf.keras.applications.MobileNet(weights="imagenet",include_top=False, input_tensor=input_img)
+        model_cnn = tf.keras.applications.MobileNet(weights="imagenet", include_top=False, input_tensor=input_img)
     elif model_name == 'InceptionV3':
-        model_cnn = tf.keras.applications.InceptionV3(weights="imagenet",include_top=False, input_shape=(256, 256, 3))
+        model_cnn = tf.keras.applications.InceptionV3(weights="imagenet", include_top=False, input_shape=(256, 256, 3))
     if retrainModel:
         for layer in model_cnn.layers[:-4]:
             layer.trainable = True
@@ -136,20 +150,25 @@ def pretrained_model(img_size, model_name, retrainModel=False, dataFormat='folde
     return model
 
 def append_image_extention(imgPath):
-    return imgPath+'.jpg'
+    return imgPath + '.jpg'
 
-def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model_dest, class_limit, img_size, dataFormat='folder', load_model = False, savedModel=None):
+def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model_dest, 
+         class_limit, img_size, dataFormat='folder', load_model = False, savedModel=None):
+    """
+    
+    """
     if os.path.exists(main_exp_folder)  == False :
         os.mkdir(main_exp_folder, 0o755)
 
     print('---------------------------------------START----------------------------')
     print(main_exp_folder)
     print('------------------------------------------------------------------------')
-    datagen_train = ImageDataGenerator(validation_split=0.20, rotation_range=10, zoom_range=0.2) #for ISA64 dataset
-    #datagen_train = ImageDataGenerator(validation_split=0.20) #for KArSL
-    datagen_test = ImageDataGenerator()
+    datagen_train = ImageDataGenerator(validation_split=0.20, rotation_range=10, zoom_range=0.2)
 
     if dataFormat == 'csv':
+        """
+        Generate testing data from csv
+        """
         train_df = pd.read_csv(train_path,names=['index','label','path','framesN','signerID'],header=None, dtype=str)
         train_df = shuffle(train_df)
         train_df["path"] = train_df["path"].apply(append_image_extention)
@@ -158,9 +177,13 @@ def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model
             test_df = pd.read_csv(test_path, names=['index','label','path','framesN','signerID'],header=None, dtype=str)
             test_df["path"] = test_df.path.apply(append_image_extention)
             print(test_df)
-            train_ds = datagen_train.flow_from_dataframe(dataframe=train_df, directory=None, x_col="path", y_col="label", batch_size=64, class_mode='categorical', subset = "training", target_size=(img_size, img_size), shuffle=True, seed=42)
-            val_ds  = datagen_train.flow_from_dataframe(dataframe=train_df,  directory=None, x_col="path", y_col="label", batch_size=64, class_mode='categorical', subset = "validation", target_size=(img_size, img_size), shuffle=True, seed=42)
-            test_ds = datagen_test.flow_from_dataframe(dataframe=test_df,  directory=None, x_col="path", y_col="label", batch_size=64, class_mode='categorical', target_size=(img_size, img_size), shuffle=False)
+            train_ds = datagen_train.flow_from_dataframe(dataframe=train_df, directory=None, x_col="path", y_col="label", 
+                                                         batch_size=64, class_mode='categorical', subset = "training", 
+                                                         target_size=(img_size, img_size), shuffle=True, seed=42)
+            
+            val_ds  = datagen_train.flow_from_dataframe(dataframe=train_df,  directory=None, x_col="path", y_col="label", 
+                                                        batch_size=64, class_mode='categorical', subset = "validation", 
+                                                        target_size=(img_size, img_size), shuffle=True, seed=42)
 
         else:
             y_ = train_df['label'].to_numpy()
@@ -169,28 +192,36 @@ def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model
 
             print(data_pdf)
             print(X_train_df)
-            datagen_train = ImageDataGenerator(validation_split=0.10, rotation_range=10, zoom_range=0.2) #for ISA64 dataset
-            #datagen_train = ImageDataGenerator(validation_split=0.20) #for KArSL
 
-            train_ds = datagen_train.flow_from_dataframe(dataframe=X_train_df, directory=None, x_col="path", y_col="label", batch_size=64, class_mode='categorical', subset = "training", target_size=(img_size, img_size), shuffle=True, seed=42)
-            val_ds  = datagen_train.flow_from_dataframe(dataframe=X_train_df,  directory=None, x_col="path", y_col="label", batch_size=64, class_mode='categorical', subset = "validation", target_size=(img_size, img_size), shuffle=True, seed=42)
-            test_ds = datagen_test.flow_from_dataframe(dataframe=test_df,  directory=None, x_col="path", y_col="label", batch_size=64, class_mode='categorical', target_size=(img_size, img_size), shuffle=False)
+            datagen_train = ImageDataGenerator(validation_split=0.10, rotation_range=10, zoom_range=0.2)
+
+            train_ds = datagen_train.flow_from_dataframe(dataframe=X_train_df, directory=None, x_col="path", y_col="label", 
+                                                         batch_size=64, class_mode='categorical', subset="training", 
+                                                         target_size=(img_size, img_size), shuffle=True, seed=42)
+            
+            val_ds  = datagen_train.flow_from_dataframe(dataframe=X_train_df,  directory=None, x_col="path", y_col="label", 
+                                                        batch_size=64, class_mode='categorical', subset = "validation", 
+                                                        target_size=(img_size, img_size), shuffle=True, seed=42)
         print('///////////////////////')
         print(train_ds.n)
          
-        STEP_SIZE_TRAIN= train_ds.n // 64
-        STEP_SIZE_VALID= val_ds.n // 64
+        STEP_SIZE_TRAIN = train_ds.n // 64
+        STEP_SIZE_VALID = val_ds.n // 64
 
     else:
-
-
-        train_ds = datagen_train.flow_from_directory(train_path,  batch_size=64, class_mode='sparse', target_size=(img_size, img_size), shuffle=True, seed=42, subset = "training")
-        val_ds = datagen_train.flow_from_directory(train_path,  batch_size=64, class_mode='sparse', target_size=(img_size, img_size), shuffle=False, seed=42, subset = "validation")
-        # test_ds = datagen_test.flow_from_directory(test_path,  batch_size=64, class_mode='sparse', target_size=(img_size, img_size), shuffle=False)
-
-        STEP_SIZE_TRAIN= train_ds.samples // 64
-        STEP_SIZE_VALID= val_ds.samples // 64
-
+        """
+        Generate data from a training and validation directory
+        """
+        train_ds = datagen_train.flow_from_directory(train_path,  batch_size=64, class_mode='sparse', 
+                                                     target_size=(img_size, img_size), shuffle=True, 
+                                                     seed=42, subset = "training")
+        
+        val_ds = datagen_train.flow_from_directory(train_path,  batch_size=64, class_mode='sparse', 
+                                                   target_size=(img_size, img_size), shuffle=False, 
+                                                   seed=42, subset = "validation")
+        
+        STEP_SIZE_TRAIN = train_ds.samples // 64
+        STEP_SIZE_VALID = val_ds.samples // 64
 
     # model 
     if model_name =='mobileNet' and load_model == False:
@@ -198,7 +229,8 @@ def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model
 
     early_stopper = EarlyStopping(monitor='val_loss', patience=10)
     time_callback = History()
-    best_checkpoint = keras.callbacks.ModelCheckpoint(filepath = main_exp_folder + "/model-best.h5",  verbose = 1, save_best_only = True)
+    best_checkpoint = keras.callbacks.ModelCheckpoint(filepath = main_exp_folder + "/model-best.h5",  
+                                                      verbose = 1, save_best_only = True)
 
     if load_model:
         model = keras.models.load_model(savedModel)
@@ -206,16 +238,12 @@ def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model
         es = 0
     else:    
         hist = model.fit(train_ds, validation_data=val_ds, epochs = 100, callbacks=[time_callback, best_checkpoint, early_stopper])
-        #save last model
         model.save(model_dest) 
         model = keras.models.load_model(filepath = main_exp_folder + "/model-best.h5")
-        # es = early_stopper.get_epochNumber() 
-        # timeInfo = time_callback.times 
-        # saveModelTimes(timeInfo, main_exp_folder)
+
         write_results(hist, main_exp_folder, 0)     
         visualise_hist(hist, main_exp_folder, 0)
 
-        # test
         score, acc = model.evaluate(val_ds)
         print('val score:', score)
         print('val accuracy:', acc)
@@ -223,28 +251,27 @@ def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model
     model.load_weights(main_exp_folder + "/model-best.h5")
     Y_pred = model.predict(val_ds)
     y_pred = np.argmax(Y_pred, axis=1)
-    pd.DataFrame(y_pred).to_csv(os.path.join(main_exp_folder ,'predicted_testLabels.csv'), sep=',')
+    pd.DataFrame(y_pred).to_csv(os.path.join(main_exp_folder, 'predicted_testLabels.csv'), sep=',')
 
     ### Get labels
     y_test = val_ds.labels 
-    pd.DataFrame(y_test).to_csv(os.path.join(main_exp_folder ,'testLabels.csv'), sep=',')
+    pd.DataFrame(y_test).to_csv(os.path.join(main_exp_folder, 'testLabels.csv'), sep=',')
 
     print_confusion_matrix(y_test, class_limit, y_pred, main_exp_folder)
 
-
-### Model configurations ######
+"""Configure our models"""
 model_name = 'mobileNet'
 input_size = 224
 retrainModel = False
 dataFormat = 'folder' # 'csv' for csv files or 'folder' to read from folders
 
-#################
-
+"""Configure the rest of our settings"""
 train_path = "../dataset/elar/star/train" #contains train signs after forward fusion
-# test_path  = "/home/eye/lsa64_raw/fusion/forward/001" #contains test signs after forward fusion
 main_exp_folder = '../results/elar/star'
 model_dest = os.path.join(main_exp_folder, 'Last.h5')
 class_limit = 29
 load_model = False
 savedModel='../results/elar/star/model-best.h5'
-main(model_name, retrainModel, train_path, None, main_exp_folder, model_dest, class_limit, input_size, dataFormat, load_model, savedModel)
+
+main(model_name, retrainModel, train_path, None, main_exp_folder, model_dest, class_limit,
+      input_size, dataFormat, load_model, savedModel)

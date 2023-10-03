@@ -172,9 +172,11 @@ def flatten_key_points(hand_landmarks):
     return hand_features, np.array([x_min, y_min, x_max, y_max])
 
 def get_hand_cutout(border_box, image):
+    """
+    Extract and return hand frame given source image and border box
+    """
     # Extra pixels around border box are arbitrary and experimental
     img_y, img_x = image.shape[0:2]
-
 
     if not border_box is None:
         # print(border_box)
@@ -193,7 +195,9 @@ def get_hand_cutout(border_box, image):
 
 
 def extract_eshr_features(left_border_box, right_border_box, image):
-
+    """
+    Extract hand images, and calculated hand features based on border boxes and supplied frame
+    """
     # Media pipe box is quite tight, increase border box to give some more clues to the pretrained resnet
     # Experimentally we increase this border box by 7 pixels on each side
     
@@ -246,6 +250,9 @@ def get_hand_sides(features, boxes):
     return keypoints, left_box, right_box
 
 def mediapipe_extraction(frame, prev_left_keypoints, prev_right_keypoints, prev_left_border_box, prev_right_border_box):
+    """
+    Complete all mediapipe feature extraction required
+    """
     mediapipe_features = np.zeros(
         shape=(MEDIAPIPE_FEATURES + ESHR_FEATURES), dtype="float32"
     )
@@ -289,6 +296,9 @@ def mediapipe_extraction(frame, prev_left_keypoints, prev_right_keypoints, prev_
 
 
 def extract_features(frame, prev_left_keypoints, prev_right_keypoints, left_border_box, right_border_box):
+    """
+    Complete all image feature extraction using cnn feature extractor
+    """
     # Create feature array
     features = np.zeros(
         shape=(TOTAL_FEATURES), 

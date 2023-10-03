@@ -1,6 +1,8 @@
 
 # Train with 3DCNN
 if __name__ == '__main__':
+    # Not Normal to have file setout like this
+    # Code seemed to run multiple times and this was able to fix it
     import os
     import sys
     from datetime import datetime
@@ -19,6 +21,10 @@ if __name__ == '__main__':
     from collections import OrderedDict
 
     class LabelSmoothingCrossEntropy(nn.Module):
+        """
+        Label Smoothing supposedly improved the validation accuracy of 
+        the SAM-SLR model
+        """
         def __init__(self):
             super(LabelSmoothingCrossEntropy, self).__init__()
         def forward(self, x, target, smoothing=0.1):
@@ -50,17 +56,16 @@ if __name__ == '__main__':
     logger.info('Logging to file...')
     writer = SummaryWriter(sum_path)
 
-    # Use specific gpus
-    # os.environ["CUDA_VISIBLE_DEVICES"]="4,5,6,7"
+    # We're only training with one CUDA capable device
     os.environ["CUDA_VISIBLE_DEVICES"]="0"
-    # Device setting
+    # Should always be GPU, no point training with cpu
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     # Hyperparams
     num_classes = 29 
     epochs = 100
     batch_size = 4
-    learning_rate = 1e-3#1e-3 Train 1e-4 Finetune
+    learning_rate = 1e-3 #1e-3 Train 1e-4 Finetune
     weight_decay = 1e-4 #1e-4
     log_interval = 80
     sample_size = 128
@@ -76,15 +81,23 @@ if __name__ == '__main__':
     transform = transforms.Compose([transforms.Resize([sample_size, sample_size]),
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.5], std=[0.5])])
-    train_set = Sign_Isolated(data_path=data_path, label_path=label_train_path, frames=sample_duration,
-        num_classes=num_classes, train=True, transform=transform)
-    val_set = Sign_Isolated(data_path=data_path2, label_path=label_val_path, frames=sample_duration,
-        num_classes=num_classes, train=False, transform=transform)
+    
+    train_set = Sign_Isolated(data_path=data_path, label_path=label_train_path, 
+                              frames=sample_duration, num_classes=num_classes, 
+                              train=True, transform=transform)
+    
+    val_set = Sign_Isolated(data_path=data_path2, label_path=label_val_path, 
+                            frames=sample_duration, num_classes=num_classes, 
+                            train=False, transform=transform)
+    
     logger.info("Dataset samples: {}".format(len(train_set)+len(val_set)))
-    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=8)
-    val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=8)
-    # Create model
 
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=8)
+
+    val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=8)
+    
+    
+    # Create model
     model = r2plus1d_18(pretrained=True, num_classes=num_classes)
     # load pretrained
     new_state_dict = OrderedDict()
@@ -93,13 +106,8 @@ if __name__ == '__main__':
     print(model)
 
     model = model.to(device)
-    # Run the model parallelly
-    # if torch.cuda.device_count() > 1:
-    #     logger.info("Using {} GPUs".format(torch.cuda.device_count()))
-    #     model = nn.DataParallel(model)
-    # Create loss criterion & optimizer
-    criterion = nn.CrossEntropyLoss()
-    # criterion = LabelSmoothingCrossEntropy()
+    # criterion = nn.CrossEntropyLoss()
+    criterion = LabelSmoothingCrossEntropy()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10, threshold=0.0001)
 

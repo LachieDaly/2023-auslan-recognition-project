@@ -63,16 +63,16 @@ def lstm_build(frames_norm:int, feature_length:int, num_classes:int, dropout:flo
 
     return model
 
-def lstm_build_multi(frames_norm:int, feature_length_01:int, feature_length_02:int, num_classes:int, dropout:float = 0.5, model_name:str = 'None'): #-> keras.Model:
+def lstm_build_multi(frames_norm:int, feature_length_01:int, feature_length_02:int, num_classes:int, 
+                     dropout:float = 0.5, model_name:str = 'None'): #-> keras.Model:
 
     # Build new LSTM model
     print("Build and compile the model ...")
-
     
     input_01 = Input(shape=(frames_norm, feature_length_01))         
-    model_01_01 = tf.keras.layers.LSTM(feature_length_01 * 1, return_sequences=True, input_shape=(frames_norm, feature_length_01), dropout=dropout)(input_01)    
+    model_01_01 = tf.keras.layers.LSTM(feature_length_01 * 1, return_sequences=True, 
+                                       input_shape=(frames_norm, feature_length_01), dropout=dropout)(input_01)    
     model_01_02 = tf.keras.layers.LSTM(feature_length_01 * 1, return_sequences=False, dropout=dropout)(model_01_01)
-
 
     input_02 = Input(shape=(frames_norm, feature_length_02))         
     model_02_01 = tf.keras.layers.LSTM(1024, return_sequences=True, input_shape=(frames_norm, feature_length_02), dropout=0.5)(input_02)    
@@ -82,13 +82,13 @@ def lstm_build_multi(frames_norm:int, feature_length_01:int, feature_length_02:i
     fc = Dense(num_classes, activation='softmax')(merged_layers)
     
     model = Model([input_01, input_02], [fc]) 
-       
-    
+        
     model.summary()
 
     return model
 
-def lstm_build_multi_single(frames_norm:int, feature_length_01:int, feature_length_02:int, num_classes:int, dropout:float = 0.5, model_name:str = 'None'): #-> keras.Model:
+def lstm_build_multi_single(frames_norm:int, feature_length_01:int, feature_length_02:int, 
+                            num_classes:int, dropout:float = 0.5, model_name:str = 'None'):
 
     # Build a fused LSTM and CNN (LSTM for frames and CNN for a single image per video)
 
@@ -103,8 +103,6 @@ def lstm_build_multi_single(frames_norm:int, feature_length_01:int, feature_leng
     x1 = tf.keras.layers.Dropout(0.6)(x1)
 
     #########x1 = BatchNormalization( axis = -1 )(x1)
-
-
     ## Model 02
     img_size = 224
     input_img = tf.keras.layers.Input(shape=(img_size, img_size, 3), name='input_img')
@@ -115,10 +113,8 @@ def lstm_build_multi_single(frames_norm:int, feature_length_01:int, feature_leng
     x2 = keras.layers.Dropout(0.6)(x2)
 
     #########x2 = BatchNormalization(axis = -1 )(x2)
-
-    ##
     x = concatenate([x1, x2])
-    x = BatchNormalization(axis = -1 )(x)
+    x = BatchNormalization(axis = -1)(x)
     x = x[:,:,np.newaxis]
     x = tf.keras.layers.Conv1D(256, 7, activation='relu')(x)
     # x = keras.layers.Dropout(0.6)(x)
@@ -133,14 +129,11 @@ def lstm_build_multi_single(frames_norm:int, feature_length_01:int, feature_leng
     #model = tf.keras.models.Model([input_frames, model_cnn.input], fc)
     model = tf.keras.models.Model(inputs=[input_frames, input_img], outputs=fc)
 
-    
     model.summary()
 
     return model
 
-
 def pretrainedModel(img_size, model_name, num_classes, retrain_model=False):
-
     input_img = tf.keras.layers.Input(shape=(img_size, img_size, 3))
     #normalization_layer = tf.keras.layers.Rescaling(1./255)
     if model_name == 'mobileNet':
@@ -162,9 +155,7 @@ def pretrainedModel(img_size, model_name, num_classes, retrain_model=False):
     
     return model
 
-
 def lstm_load(path:str, frames_norm:int, feature_length:int, num_classes:int) -> tf.keras.Model:
-
     print("Load trained LSTM model from %s ..." % path)
     model = tf.keras.models.load_model(path)
     

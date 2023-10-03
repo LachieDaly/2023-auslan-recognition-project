@@ -109,6 +109,10 @@ class ElarDataModule(pl.LightningDataModule):
 
 
 class ElarDataset(Dataset):
+    """
+    Our representation the Elar Dataset with images for both cropped hands
+    and poseflow information
+    """
     def __init__(self, root_path, job_path, job, label_file_path, transform, sequence_length,
                  temporal_stride, return_path=False):
         self.root_path = Path(root_path)
@@ -139,6 +143,7 @@ class ElarDataset(Dataset):
             with open(kp_path, 'r') as keypoints_file:
                 value = json.loads(keypoints_file.read())
                 keypoints = np.array(value['people'][0]['pose_keypoints_2d'])
+                # Extract keypoints exclusing confidence values
                 x = keypoints[0::3]
                 y = keypoints[1::3]
                 keypoints = np.stack((x, y), axis=0)
@@ -212,6 +217,11 @@ class ElarDataset(Dataset):
 
             clip.append(crops)
 
+            """
+            11 - 17 removes Hip Knee and Ankle keypoints (These are not super relevant to sign language and can be out of frame)
+            19 - 25 removes Toe and Heel Keypoints (Same as above)
+            65 - 135 removes facial features
+            """
             pose_transform = Compose(DeleteFlowKeypoints(list(range(65, 135))),
                                      DeleteFlowKeypoints(list(range(19, 25))),
                                      DeleteFlowKeypoints(list(range(11, 17))),

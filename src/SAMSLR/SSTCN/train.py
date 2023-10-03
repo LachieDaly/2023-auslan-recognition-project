@@ -26,11 +26,12 @@ if __name__ == "__main__":
     print(opt)
     print("Let's use", torch.cuda.device_count(), "GPUs!")
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     # Define training set
     train_dataset = TorchDataset(is_train=True, feature_dir=opt.dataset_path, is_aug=True, repeat=1)
     train_dataloader = DataLoader(train_dataset, batch_size=opt.batch_size, shuffle=True, num_workers=8,pin_memory=True)
 
-    # Define test set
+    # Define validation set
     test_dataset = TorchDataset(is_train=False, feature_dir=opt.dataset_path, repeat=1)
     test_dataloader = DataLoader(test_dataset, batch_size=opt.batch_size, shuffle=False, num_workers=8,pin_memory=True)
 
@@ -45,7 +46,6 @@ if __name__ == "__main__":
     else:
         model.init_weights()
 
-    # model = torch.nn.DataParallel(model)
     model = model.to(device)
     
     #model = model.module

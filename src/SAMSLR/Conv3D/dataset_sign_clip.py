@@ -10,6 +10,9 @@ import numpy as np
 Implementation of Sign Language Dataset
 """
 class Sign_Isolated(Dataset):
+    """
+    A representation of our dataset for training and validation
+    """
     def __init__(self, data_path, label_path, frames=16, num_classes=29, train=True, transform=None, test_clips=5):
         super(Sign_Isolated, self).__init__()
         self.data_path = data_path
@@ -36,7 +39,12 @@ class Sign_Isolated(Dataset):
                 self.data_folder.append(os.path.join(data_path, line[0]))
                 self.labels.append(int(line[1]))
 
-    def frame_indices_tranform(self, video_length, sample_duration):
+    def frame_indices_transform(self, video_length, sample_duration):
+        """
+        Gets a random segment equal to our sample duration if it can
+        otherwise gets the entire video and if the video is too short
+        the final frame is repeated
+        """
         if video_length > sample_duration:
             random_start = random.randint(0, video_length - sample_duration)
             frame_indices = np.arange(random_start, random_start + sample_duration) + 1
@@ -45,12 +53,12 @@ class Sign_Isolated(Dataset):
             while frame_indices.shape[0] < sample_duration:
                 # seem to repeat 
                 # frame_indices = np.concatenate((frame_indices, np.arange(video_length)), axis=0)
-                frame_indices = np.concatenate((frame_indices, np.array([video_length - 1])), axis=0)
+                frame_indices = np.concatenate((frame_indices, np.array([frame_indices[-1]])), axis=0)
             frame_indices = frame_indices[:sample_duration] + 1
         assert frame_indices.shape[0] == sample_duration
         return frame_indices
 
-    def frame_indices_tranform_test(self, video_length, sample_duration, clip_no=0):
+    def frame_indices_transform_test(self, video_length, sample_duration, clip_no=0):
         if video_length > sample_duration:
             start = (video_length - sample_duration) // (self.test_clips - 1) * clip_no
             frame_indices = np.arange(start, start + sample_duration) + 1
@@ -60,18 +68,24 @@ class Sign_Isolated(Dataset):
             frame_indices = np.arange(video_length)
             while frame_indices.shape[0] < sample_duration:
                 # frame_indices = np.concatenate((frame_indices, np.arange(video_length)), axis=0)
-                frame_indices = np.concatenate((frame_indices, np.array([video_length - 1])), axis=0)
+                frame_indices = np.concatenate((frame_indices, np.array([frame_indices[-1]])), axis=0)
             frame_indices = frame_indices[:sample_duration] + 1
 
         return frame_indices
 
     def random_crop_paras(self, input_size, output_size):
+        """
+        Returns set of coord required to randomly crop images
+        """
         diff = input_size - output_size
         i = random.randint(0, diff)
         j = random.randint(0, diff)
         return i, j, i+output_size, j+output_size
 
     def read_images(self, folder_path, clip_no=0):
+        """
+        Reads images from our image folder
+        """
         # assert len(os.listdir(folder_path)) >= self.frames, "Too few images in your data folder: " + str(folder_path)
         images = []
         if self.train:
@@ -107,9 +121,15 @@ class Sign_Isolated(Dataset):
         return images
 
     def __len__(self):
+        """
+        Returns the number of samples in the particular training/validation/test set
+        """
         return len(self.data_folder)
 
     def __getitem__(self, idx):
+        """
+        Get Item for our DataLoader
+        """
         selected_folder = self.data_folder[idx]
         if self.train:
             images = self.read_images(selected_folder)

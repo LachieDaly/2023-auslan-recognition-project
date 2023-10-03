@@ -108,6 +108,9 @@ class ElarDataModule(pl.LightningDataModule):
 
 
 class ElarDataset(Dataset):
+    """
+    Our representation of the ELAR dataset with just cropped images of both hands
+    """
     def __init__(self, root_path, job_path, job, label_file_path, transform, sequence_length,
                  temporal_stride, return_path=False):
         self.root_path = Path(root_path)

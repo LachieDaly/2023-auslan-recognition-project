@@ -49,6 +49,7 @@ train_df = train_df.head(10)
 val_df = pd.read_csv("C:/Users/Lachie/Desktop/Spreadsheet/test29_100.csv")
 start_time = time.time()
 
+"""Attempt at feature extraction and training within the same model"""
 
 def crop_center_square(frame):
     y, x = frame.shape[0:2]

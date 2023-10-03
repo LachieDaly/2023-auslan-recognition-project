@@ -42,7 +42,10 @@ def calculate_orientation(width, height):
     return value
 
 def calculate_slope_orientation(left_border_box, right_border_box):
-
+    """
+    Calculate slope between bounding boxes and orientation of bounding boxes
+    return left orientation, right orientation, and slope
+    """
     left_orientation = left_width = left_height = right_orientation = right_width = right_height = slope = 0
     if not left_border_box is None:
         left_width, left_height = calculate_width_and_height(left_border_box)
@@ -58,6 +61,10 @@ def calculate_slope_orientation(left_border_box, right_border_box):
     return left_orientation, right_orientation, slope
 
 def flatten_key_points(hand_landmarks):
+    """
+    flattens the keypoint landmarks of a hand provided by hands mediapipe
+    returns 63 long 1D array with x, y, z coordinates
+    """
     # Hands have 63 features total
     hand_features = np.zeros(shape=(63), dtype="float32")
 

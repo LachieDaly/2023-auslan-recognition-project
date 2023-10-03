@@ -51,6 +51,9 @@ start_time = time.time()
 
 
 def crop_center_square(frame):
+    """
+    Crops a rectangular image into a square
+    """
     y, x = frame.shape[0:2]
     min_dim = min(y, x)
     start_x = (x // 2) - (min_dim // 2)
@@ -59,6 +62,10 @@ def crop_center_square(frame):
 
 
 def load_video(path, max_frames=0, augment=False, resize=(IMG_SIZE, IMG_SIZE)):
+    """
+    Load up to the maximum number of frames into a numpy array
+    augment/resize commented out
+    """
     cap = cv2.VideoCapture(path)
     frames = []
     try:
@@ -91,6 +98,9 @@ def load_video(path, max_frames=0, augment=False, resize=(IMG_SIZE, IMG_SIZE)):
     return np.array(frames)
 
 def build_feature_extractor():
+    """
+    Returns a pretrained VGG16 convolutional model feature extractor
+    """
     feature_extractor = keras.applications.vgg16.VGG16(
         weights="imagenet",
         include_top=False,
@@ -115,11 +125,15 @@ label_processor = keras.layers.StringLookup(
 print(label_processor.get_vocabulary())
 
 def calculate_width_and_height(border_box):
+    """
+    Calculate width and height values of supplied box
+    """
     width = border_box[2] - border_box[0]
     height = border_box[3] - border_box[1]
     return width, height
 
 def calculate_orientation(width, height):
+    """Calculate orientation value given width and height of a box"""
     value = 0
     if width > height:
         value = 1
@@ -130,6 +144,9 @@ def calculate_orientation(width, height):
     return np.full(shape=25, fill_value=value, dtype='int')
 
 def calculate_slope_orientation(left_border_box, right_border_box):
+    """
+    Calculate and return slope and orientation features based on border boxes
+    """
     eshr_features = np.zeros(
         shape=(ESHR_FEATURES), dtype="float32"
     )
@@ -151,6 +168,10 @@ def calculate_slope_orientation(left_border_box, right_border_box):
 
 
 def flatten_key_points(hand_landmarks):
+    """
+    Flattent and return the hand landmarks returned by mediapipe hands 
+    in addition to the bounding box for the hand
+    """
     # Hands have 63 features total
     hand_features = np.zeros(shape=(63), dtype="float32")
 
@@ -180,6 +201,9 @@ def flatten_key_points(hand_landmarks):
     return hand_features, np.array([x_min, y_min, x_max, y_max])
 
 def extract_eshr_features(left_border_box, right_border_box, image):
+    """
+    Calculates and returns accessory features and masked image based on border boxes
+    """
     mask = np.zeros(
         shape=(image.shape[:2]), dtype=np.uint8
     )
@@ -201,6 +225,9 @@ def extract_eshr_features(left_border_box, right_border_box, image):
     return output_image, eshr_features
 
 def mediapipe_extraction(batch_frame, prev_left_keypoints, prev_right_keypoints, left_border_box, right_border_box, frame_no=0):
+    """
+    Pass image through mediapipe hands for keypoint extraction, and perform all necessary calculations from these keypoints
+    """
     mediapipe_features = np.zeros(
         shape=(MEDIAPIPE_FEATURES + ESHR_FEATURES), dtype="float32"
     )
@@ -264,6 +291,9 @@ def mediapipe_extraction(batch_frame, prev_left_keypoints, prev_right_keypoints,
 
 
 def extract_features(frame, prev_left_keypoints, prev_right_keypoints, left_border_box, right_border_box, frame_no=0):
+    """
+    Extract hand spatial features from the masked image
+    """
     # Create feature array
     features = np.zeros(
         shape=(TOTAL_FEATURES), 
@@ -278,6 +308,9 @@ def extract_features(frame, prev_left_keypoints, prev_right_keypoints, left_bord
     return features, left_border_box, right_border_box
 
 def prepare_all_videos(df, root_dir, augment):
+    """
+    Turn all videos into features
+    """
     # cv2.namedWindow("Hands")
     # cv2.namedWindow("Full")
     num_samples = len(df)

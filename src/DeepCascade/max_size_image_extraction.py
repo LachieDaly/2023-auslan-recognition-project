@@ -27,6 +27,8 @@ from vidaug import augmentors as va
 
 sometimes = lambda aug: va.Sometimes(0.5, aug) # Used to apply augmentor with 50% probability
 
+"""Attempt at getting better keypoint extraction with a higher resolution image - didn't work"""
+
 IMG_SIZE = 224
 IMG_RESIZE_SIZE = IMG_SIZE + 15
 MAX_SEQ_LENGTH = 20

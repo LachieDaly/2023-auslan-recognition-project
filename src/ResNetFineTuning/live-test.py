@@ -5,20 +5,19 @@ from threading import Thread
 import time
 
 """
-Can be used to demonstrate star rgb preprocessing
-using webcam footage
+This will be used to demonstrate how star works with data
 """
 
 def rgb_star_representation(frames):
+    """
+    Calculate and return Star RGB representation of the provided frames
+    """
     frame_number = len(frames)
     if frame_number > 6:
-        # print(frame_number)
         section_number = frame_number // 3
         extra_frames = frame_number % 3
         first_slice = section_number
-        # print(first_slice)
         second_slice = 2 * section_number + extra_frames
-        # print(second_slice)
         blue_range = frames[0:first_slice]
         green_range = frames[first_slice:second_slice]
         red_range = frames[second_slice:]
@@ -29,6 +28,9 @@ def rgb_star_representation(frames):
         return star_representation
 
 def calculate_star(section, num):
+    """
+    Calculate Star on one channel of an image
+    """
     # print('calculate star')
     h = section[0].shape[0]
     w = section[0].shape[1]
@@ -38,10 +40,7 @@ def calculate_star(section, num):
         current_frame_norm = np.linalg.norm(section[k], axis=2)
         previous_frame_norm = np.linalg.norm(section[k-1], axis=2)
         euclidean = np.absolute(previous_frame_norm - current_frame_norm)
-        # multiplied = np.multiply(section[k-1], section[k])
-        # dot_product = np.sum(multiplied, axis=2)
         dot_product = np.vdot(section[k-1], section[k])
-        # dot_product = np.dot(section[k-1], section[k])
         product_of_lengths = current_frame_norm*previous_frame_norm
         angle = 1 - ((dot_product)/(product_of_lengths))
         result = result + (1 - (angle/2))*euclidean    
@@ -50,10 +49,18 @@ def calculate_star(section, num):
 frames = []
 
 def combine_matrices(blue, green, red):
+    """
+    Combine three channels into one image
+    """
     image = np.stack((blue, green, red), axis=2)    
     return image
 
 def threaded_function(name):
+    """
+    This threaded function waits until frames is more than 20
+    then calculates the star RGB represenation before
+    displaying it. 
+    """
     while True:
         time.sleep(0.1)
         global frames
@@ -66,7 +73,11 @@ def threaded_function(name):
                 cv2.imshow('Processed', cv2.flip(star_image,1))
                 cv2.waitKey(1)
 
-
+"""
+We start capture from the connected video device
+and save the frames to the frames array and display
+the frames in a window
+"""
 cap = cv2.VideoCapture(0)
 x = Thread(target=threaded_function, args=(1,))
 x.daemon = True

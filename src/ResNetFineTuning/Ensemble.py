@@ -200,24 +200,16 @@ class MyModel(nn.Module):
         super(MyModel, self).__init__()
         self.resnet50 = models.resnet50(weights=models.ResNet101_Weights.IMAGENET1K_V1)
         self.resnet101 = models.resnet101(weight=models.ResNet101_Weights.IMAGENET1K_V1)
-
-
-
-class EnsembleModel(nn.Module):
-    def __init__(self, modelA, modelB):
-        super(self).__init__()
-        self.modelA = modelA
-        self.modelB = modelB
-        self.classifier = nn.Linear()
+        self.classifier = nn.Linear(29)
 
     def forward(self, x):
-        x1 = self.modelA(x)
-        x2 = self.modelB(x)
+        x1 = self.resnet50(x)
+        x2 = self.resnet101(x)
         x = torch.cat((x1, x2))
-        x = self.classifier(F.relu(x))
+        x = self.classifier(torch.relu(x))
         return x
 
-ensemble_model = 
+ensemble_model = MyModel()
 
 num_ftrs = model_ft.fc.in_features
 

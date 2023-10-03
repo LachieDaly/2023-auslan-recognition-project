@@ -1,6 +1,7 @@
 # ELAR Transformer Network
 
-This folder contains the code of my modified ChaLearn-2021-LAP model, updated to use more up to date libraries, and to accept ELAR data.
+This folder contains the code of my modified ChaLearn-2021-LAP model, Adapted to use the most currently
+up to date libraries, and work with data from the ELAR isolated signing dataset
 
 OpenPose with BODY-135 is required to extract the keypoints
 

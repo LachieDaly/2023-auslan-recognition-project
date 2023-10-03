@@ -50,6 +50,9 @@ start_time = time.time()
 
 
 def crop_center_square(frame):
+    """
+    Returns square cropped frame
+    """
     y, x = frame.shape[0:2]
     min_dim = min(y, x)
     start_x = (x // 2) - (min_dim // 2)
@@ -58,6 +61,10 @@ def crop_center_square(frame):
 
 
 def load_video(path, max_frames=0, augment=False, resize=(IMG_SIZE, IMG_SIZE)):
+    """
+    load frames from a video up to the max_frame cap. Fill with last frame if video too short
+    augment will randomly crop an image to the required size
+    """
     cap = cv2.VideoCapture(path)
     frames = []
     try:
@@ -92,6 +99,9 @@ def load_video(path, max_frames=0, augment=False, resize=(IMG_SIZE, IMG_SIZE)):
     return np.array(frames)
 
 def build_feature_extractor():
+    """
+    Returns pretrained VGG16 feature extractor    
+    """
     feature_extractor = keras.applications.vgg16.VGG16(
         weights="imagenet",
         include_top=False,
