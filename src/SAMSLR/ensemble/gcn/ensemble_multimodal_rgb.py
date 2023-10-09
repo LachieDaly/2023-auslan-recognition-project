@@ -1,22 +1,30 @@
-import argparse
 import pickle
 
 import numpy as np
 from tqdm import tqdm
 
-
+# Our data labels
 label = open('test_labels_pseudo.pkl', 'rb')
 label = np.array(pickle.load(label))
+
+# Our GCN results
 r1 = open('test_gcn_w_val_finetune.pkl', 'rb')
 r1 = list(pickle.load(r1).items())
+
+# Our 3DCNN RGB results
 r2 = open('test_rgb_w_val_finetune.pkl', 'rb')
 r2 = list(pickle.load(r2).items())
+
+# Our Optical Flow results
 r3 = open('test_flow_color_w_val_finetune.pkl', 'rb')
 r3 = list(pickle.load(r3).items())
+
+# Is this our SSTCN score
 r4 = open('test_feature_w_val_finetune.pkl', 'rb')
 r4 = list(pickle.load(r4).items())
 
 
+# We can give give these results a bit more choice
 alpha = [1,0.9,0.4,0.4]  # gcn, rgb, flow_color, bin_w_val, 
 
 right_num = total_num = right_num_5 = 0

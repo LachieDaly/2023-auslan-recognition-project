@@ -1,16 +1,18 @@
 import torch
-from torch.autograd import Variable
-from torchvision import transforms
-from torch.utils.data import Dataset, DataLoader
-import cv2
+from torch.utils.data import Dataset
 import numpy as np
-import scipy.io
 import os
-from torch.autograd import Variable
 import random
  
 class TorchDataset(Dataset):
     def __init__(self, is_train, feature_dir, is_aug=False, repeat=1):
+        """
+        Initialise torch dataset for SSTCN
+
+        :param is_train: if true, dataset if for training, otherwise for validation
+        :param feature_dir: 
+        :return: TorchDataset class
+        """
         self.label_path = './Data/ELAR/train_val_labels.csv'
         self.is_train = is_train
         self.is_aug = is_aug
@@ -38,6 +40,9 @@ class TorchDataset(Dataset):
         return data_len
 
     def read_file(self):
+        """
+        
+        """
         feature_label_list = []
         label_file = open(self.label_path, 'r', encoding='utf-8')
         for line in label_file.readlines():
@@ -57,6 +62,12 @@ class TorchDataset(Dataset):
         return feature_label_list
  
     def load_data(self, path):
+        """
+        load data from path
+
+        :param path: path to load data from
+        :return: torch data
+        """
         data = torch.load(path, map_location='cpu')
         if self.is_aug:
             data = data.view(60, -1, 24, 24)
@@ -64,9 +75,9 @@ class TorchDataset(Dataset):
 ############## aug on frames ##########################################
             slist = range(0, 60)
             if judge > 7.5 and judge < 11.5:
-                rlength = 60 - random.randint(1,29)
-                rindex = random.sample(range(0,60),rlength)
-                extlist = random.sample(rindex,60-rlength)
+                rlength = 60 - random.randint(1, 29)
+                rindex = random.sample(range(0, 60), rlength)
+                extlist = random.sample(rindex, 60-rlength)
                 final_list = sorted([*rindex, *extlist])
                 slist = np.array(final_list)
 

@@ -28,6 +28,7 @@ from vidaug import augmentors as va
 
 sometimes = lambda aug: va.Sometimes(0.5, aug) # Used to apply augmentor with 50% probability
 
+"""Mediapipe with augmented data and more augmented samples - and lstm training in same"""
 
 IMG_SIZE = 224
 MAX_SEQ_LENGTH = 20

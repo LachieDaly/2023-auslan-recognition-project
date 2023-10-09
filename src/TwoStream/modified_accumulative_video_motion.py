@@ -1,10 +1,13 @@
 import os
 import cv2
 import glob
-from pathlib import Path
 import numpy as np
 
 def accumulative_video_motion():
+    """
+    Performs forwards, backwards, and concatenated fusion of the frames for The ELAR dataset
+    placing each respective gesture in its own folder for training data
+    """
     # perform forward, backward, and concatenated fusion of the frames for ISA64 dataset where structure is [signer-->sign-->samples]
     home_source_folder = os.path.normpath('../dataset/elar/images/')
     signs = glob.glob(home_source_folder + '/*/*/*')

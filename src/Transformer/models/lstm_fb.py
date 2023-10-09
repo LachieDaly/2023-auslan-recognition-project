@@ -5,6 +5,12 @@ from .common import FeatureExtractor, LinearClassifier, LongShortTermMemory
 
 class MMTensor(nn.Module):
     def __init__(self, dim):
+        """
+        Initialises normalisation layer
+
+        :param dim: dimesnion to unsqueeze and calculate mean and standard deviation across
+        :returns: normalisation layer
+        """
         super().__init__()
 
         self.dim = dim
@@ -17,6 +23,18 @@ class MMTensor(nn.Module):
 class LSTMFB(nn.Module):
     def __init__(self, num_classes=29, embed_size=512, sequence_length=16, cnn='rn34',
                  freeze_layers=0, dropout=0, **kwargs):
+        """
+        LSTMR intialises Long Short Term Memory Full Body model
+
+        :param num_classes: number of classes to classify
+        :param embed_size: the feature size coming from the cnn feature extractror
+        :param sequence_length: the video sequence length
+        :param cnn: the name of the pretrained cnn to be used
+        :param freeze_layers: number of layers starting from the input to freeze in the feature extracting cnn
+        :param dropout: the dropout float to use throughout the model
+        :param **kwargs: any other potential arguments
+        :returns: Long Short Term Memory Full body network
+        """
         super().__init__()
 
         self.sequence_length = sequence_length

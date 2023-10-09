@@ -21,6 +21,8 @@ EPOCHS = 10000
 LEARNING_RATE = 0.005
 MOMENTUM = 0.92
 
+"""Training model for two separate images"""
+
 start_time = time.time()
 
 with open('./individual-hand/data.npy', 'rb') as f:

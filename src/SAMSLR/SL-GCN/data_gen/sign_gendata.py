@@ -8,10 +8,9 @@ import os
 sys.path.extend(['../'])
 
 selected_joints = {
-    '59': np.concatenate((np.arange(0,17), np.arange(91,133)), axis=0), #59
-    '31': np.concatenate((np.arange(0,11), [91,95,96,99,100,103,104,107,108,111],[112,116,117,120,121,124,125,128,129,132]), axis=0), #31
-    '27': np.concatenate(([0,5,6,7,8,9,10], 
-                    [91,95,96,99,100,103,104,107,108,111],[112,116,117,120,121,124,125,128,129,132]), axis=0) #27
+    '27': np.concatenate(([0, 5, 6, 7, 8, 9, 10], 
+                    [91, 95, 96, 99, 100, 103, 104, 107, 108, 111],
+                    [112, 116, 117, 120, 121, 124, 125, 128, 129, 132]), axis=0) #27
 }
 
 max_body_true = 1
@@ -19,6 +18,16 @@ max_frame = 150
 num_channels = 3
 
 def gendata(data_path, label_path, out_path, part='train', config='27'):
+    """
+    Generates skeleton data
+
+    :param data_path: path to data keypoints
+    :param label_path: path to label csv
+    :param out_path: path to save skeleton data
+    :param part: train/validation/test features to generate
+    :config: which skeleton configuration to use
+    :return: void - saves relevant skeleton features 
+    """
     labels = []
     data=[]
     sample_names = []
@@ -39,19 +48,25 @@ def gendata(data_path, label_path, out_path, part='train', config='27'):
     for i, data_path in enumerate(data):
 
         skel = np.load(data_path)
+        # Select joints to take
         skel = skel[:,selected,:]
 
         if skel.shape[0] < max_frame:
+            # Save as many frames as possible
             L = skel.shape[0]
             print(L)
             fp[i,:L,:,:,0] = skel
             
+            #
             rest = max_frame - L
             num = int(np.ceil(rest / L))
+            # repeat the frames again until and select only the rest
             pad = np.concatenate([skel for _ in range(num)], 0)[:rest]
+            # add the padding to the final result
             fp[i,L:,:,:,0] = pad
 
         else:
+            # Save up to the maximum number of frames
             L = skel.shape[0]
             print(L)
             fp[i,:,:,:,0] = skel[:max_frame,:,:]
@@ -60,6 +75,7 @@ def gendata(data_path, label_path, out_path, part='train', config='27'):
     with open('{}/{}_label.pkl'.format(out_path, part), 'wb') as f:
         pickle.dump((sample_names, labels), f)
 
+    "Swap 1 2 3 to 3 1 2"
     fp = np.transpose(fp, [0, 3, 1, 2, 4])
     print(fp.shape)
     np.save('{}/{}_data_joint.npy'.format(out_path, part), fp)
@@ -85,4 +101,5 @@ if __name__ == '__main__':
         arg.label_path,
         out_path,
         part=part,
-        config=arg.points)
+        config=arg.points
+    )

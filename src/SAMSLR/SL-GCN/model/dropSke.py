@@ -6,6 +6,12 @@ import warnings
 
 class DropBlock_Ske(nn.Module):
     def __init__(self, num_point, block_size=7):
+        """
+        Initialise Drop Block for the skeleton spatial dimension
+
+        :param num_points: number of skeleton points
+        :param block_size: not used?
+        """
         super(DropBlock_Ske, self).__init__()
         self.keep_prob = 0.0
         self.block_size = block_size
@@ -24,9 +30,10 @@ class DropBlock_Ske(nn.Module):
             gamma = (1. - self.keep_prob) / (1 + 1.92)
         elif self.num_point == 20:  # Kinect V1
             gamma = (1. - self.keep_prob) / (1 + 1.9)
-        else:
+        else: # <-- This only. We won't be using Kinect at all
             gamma = (1. - self.keep_prob) / (1 + 1.92)
             warnings.warn('undefined skeleton graph')
+        # Start to build our mask
         M_seed = torch.bernoulli(torch.clamp(
             input_abs * gamma, max=1.0)).to(device=input.device, dtype=input.dtype)
         M = torch.matmul(M_seed, A)

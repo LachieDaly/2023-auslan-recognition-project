@@ -1,3 +1,5 @@
+# Decided to use launch configurator instead
+
 # Hyperparameters
 # MODEL = "vtnhcpf"
 # DATASET = "handcrop_poseflow"

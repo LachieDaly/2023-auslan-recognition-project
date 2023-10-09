@@ -20,7 +20,6 @@ if __name__ == '__main__':
     parser.add_argument("--gpus", type=int)
     parser.add_argument("--max_epochs", type=int)
 
-    
     parser = module.get_model_def().add_model_specific_args(parser)
 
     program_args, _ = parser.parse_known_args()
@@ -41,7 +40,6 @@ if __name__ == '__main__':
     model.to(device)
     model.eval()
 
-
     # Let us predict
 
     submission = dict()
@@ -59,6 +57,7 @@ if __name__ == '__main__':
             for j in range(logits.size(0)):
                 submission[paths[j]] = predictions[j].item()
     
+    # TODO let's add some confusion matrix stuff in here! 
     with open(args.submission_template) as stf:
         reader = csv.reader(stf)
         with open(args.out, 'w') as of:

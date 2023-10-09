@@ -31,6 +31,11 @@ class Swish(nn.Module):
         return x.mul_(torch.sigmoid(x))
 
 class r2plus1d_18(nn.Module):
+    """
+    Our R(2+1)D model that we are using
+    Pretrained with the KINETICS400 dataset
+    
+    """
     def __init__(self, pretrained=True, num_classes=500, dropout_p=0.5):
         super(r2plus1d_18, self).__init__()
         self.pretrained = pretrained
@@ -50,7 +55,6 @@ class r2plus1d_18(nn.Module):
         out = out.flatten(1)
         out = self.dropout(out)
         out = self.fc1(out)
-
         return out
 
 class flow_r2plus1d_18(nn.Module):

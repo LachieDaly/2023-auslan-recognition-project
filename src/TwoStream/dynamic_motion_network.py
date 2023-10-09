@@ -9,8 +9,6 @@ calculated for each video (frames) with MobileNet.
 import os
 import glob
 import time
-import sys
-import warnings
 import seaborn as sn
 from matplotlib import pyplot as plt
 
@@ -32,6 +30,25 @@ def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:
     train_path=None, val_path=None, test_path=None, video_set=None, feature=None, load_model=False, saved_model=None):
     """
     The training code given a model and appropriate parameters
+
+    :param feature_dir: path to feature directory
+    :param model_dir: path to the previously trained model directory
+    :param log_path: path to log directory
+    :param model: sequence model being trained
+    :param classes_object: video classes object
+    :param batch_size: batch size hyperparameter
+    :param num_epochs: maximum number of epochs to train model for
+    :param learning_rate: learning rate of sequence model
+    :param exp_full_path: path to save model training information
+    :param val_available: if true, separate validation set can be used
+    :param csv_file: if true, csv file used to construct dataloader
+    :param train_path: path to training data
+    :param val_path: path to validation data
+    :param test_path: path to testing data
+    :param video_set: describes the training set used - usually ELAR
+    :param feature: describes the output from the feature extractor
+    :param load_model: if true, load pretrained sequence model
+    :param saved_model: path to saved model 
     """
     if csv_file:
         print('===============================================')
@@ -111,41 +128,63 @@ def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:
         
         model = tf.keras.models.load_model(model_dir + "/model-best.h5")
         es = early_stopper.stopped_epoch
-        writeResults(hist, exp_full_path, 0)
-        visualizeHis(hist, exp_full_path, 0)
+        write_results(hist, exp_full_path, 0)
+        visualize_hist(hist, exp_full_path, 0)
 
     test_loss, test_acc = model.evaluate(gen_features_val, verbose=0)
     print('\nTesting loss: {}, acc: {}\n'.format(test_loss, test_acc))
     test(model, es, exp_full_path,False, 50, gen_features_val, None, labels_val) 
     return
 
-def saveModelTimes(time_info, exp_path):
+def save_model_times(time_info, exp_path):
     """
     Writes the model times to a csv file
+
+    :param time_info: model time info object
+    :param exp_path: path to save model times
     """
     # Print and save model times
     print('Total time:')
     print(np.sum(time_info))
-    writecsv_file(time_info , 'model_times.csv', exp_path)
+    write_csv_file(time_info , 'model_times.csv', exp_path)
 
-def writecsv_file(data, file_name, path_name):
+def write_csv_file(data, file_name, path_name):
+    """
+    save data to csv file
+
+    :param data: data to be saved
+    :param file_name: file name to save data under
+    :param path_name: path to save new csv file
+    """
     pd.DataFrame(data).to_csv(os.path.join(path_name,file_name), sep=',')
 
-def writeResults(hist, exp_path, use_batch=0):
+def write_results(hist, exp_path):
     """
     Writes the results to a csv file
+
+    :param hist: model history object
+    :param exp_path: path to save model historical accuracy and loss
     """
     train_loss=hist.history['loss']
     val_loss=hist.history['val_loss']
     train_acc=hist.history['accuracy']
     val_acc=hist.history['val_accuracy']
     dataframe_data = np.transpose([train_loss, train_acc, val_loss, val_acc])
-    writecsv_file(dataframe_data , 'train_val_losses_acc.csv', exp_path)
+    write_csv_file(dataframe_data , 'train_val_losses_acc.csv', exp_path)
 
 
 def test(rm, es, main_exp_folder, load_to_memory, class_limit, test_generator=None, X_test=None, y_test=None):
     """
     Test the model with any prepared testing data
+
+    :param rm: model to be tested
+    :param es: early stopping epoch
+    :param main_exp_folder: folder to store experiment results
+    :param load_to_memory: if false, use test generator instead of np array
+    :param class_limit: maximum number of classes
+    :param test_generator: the test generator used
+    :param X_test: test featuress
+    :param y_test: test labels
     """
     if load_to_memory:
         #use X_test, y_test
@@ -170,9 +209,14 @@ def test(rm, es, main_exp_folder, load_to_memory, class_limit, test_generator=No
         y_pred = np.argmax(Y_pred, axis=1)
         print_confusion_matrix(X_test, y_test, class_limit, y_pred, main_exp_folder)
 
-def print_confusion_matrix(X_test, y_test, numb_classes, y_pred, main_exp_folder):
+def print_confusion_matrix(y_test, n_classes, y_pred, main_exp_folder):
     """
-    Prints the confusion matrix
+    Saves and prints the confusion matrix
+
+    :param y_test: actual test labels
+    :param n_classes: number of classes
+    :param y_pred: predicted test labels
+    :param main_exp_folder: path to save confusion matrix
     """
     cm = confusion_matrix(y_test.argmax(axis=1), y_pred)
     print('Confusion Matrix: ', cm.shape)
@@ -185,8 +229,8 @@ def print_confusion_matrix(X_test, y_test, numb_classes, y_pred, main_exp_folder
     # Visualizing of confusion matrix
     plotCM = False
     if plotCM:
-        df_cm = pd.DataFrame(cm, range(numb_classes), range(numb_classes))
-        plt.figure(figsize = (numb_classes,numb_classes))
+        df_cm = pd.DataFrame(cm, range(n_classes), range(n_classes))
+        plt.figure(figsize = (n_classes, n_classes))
         sn.set(font_scale=1.4)#for label size
         sn.heatmap(df_cm, annot=True,annot_kws={"size": 12})# font size
         plt.savefig(os.path.join(main_exp_folder,'cm.png'))
@@ -196,9 +240,13 @@ def print_confusion_matrix(X_test, y_test, numb_classes, y_pred, main_exp_folder
     df = pd.DataFrame(class_metrics).transpose()
     pd.DataFrame(df).to_csv(os.path.join(main_exp_folder, 'ResultMetrics.csv'), sep=',')
 
-def visualizeHis(hist, experiment_name, use_batch):
+def visualize_hist(hist, experiment_name, use_batch):
     """
-    Plot the model history
+    Plot and save model training loss and accuracy history
+
+    :param hist: model training history object
+    :param experiment_name: name of the experiment, for directory saving
+    :param use_batch: if 1, show plots in addition to saving
     """
     train_loss=hist.history['loss']
     val_loss=hist.history['val_loss']
@@ -234,10 +282,30 @@ def visualizeHis(hist, experiment_name, use_batch):
         plt.show()
     
 def train_model_lstm(video_set, feature, exp_full_path=None, exp_path=None, val_available=None,
-			folder=None, class_file = None, video_dir=None, image_dir = None, image_feature_dir=None, o_flow_dir=None, 
-			o_flow_feature_dir=None, csv_file=False, train_path=None, val_path=None, test_path=None, load_model=False, saved_model=None):
+			folder=None, class_file=None, video_dir=None, image_dir=None, image_feature_dir=None, o_flow_dir=None, 
+			o_flow_feature_dir=None, csv_file=False, train_path=None, val_path=None, test_path=None, load_model=False, 
+            saved_model=None):
     """
     Trains the dynamic motion network
+
+    :param video_set: describes the training set used - usually ELAR
+    :param feature: describes the output from the feature extractor
+    :param exp_full_path: path to save model training information'
+    :param exp_path: N/A
+    :param val_available: if true, separate validation set can be used
+    :param folder: N/A
+    :param class_file: for classes object
+    :param video_dir: UNUSED => path to videos?
+    :param image_dir: UNUSED = path to images? we're just using features
+    :param feature_dir: path to feature directory
+    :param o_flow_dir: UNUSED => optical flow directory
+    :param o_flow_feature_dir: UNUSED => optical flow feature directory
+    :param csv_file: if true, csv file used to construct dataloader
+    :param train_path: path to training data
+    :param val_path: path to validation data
+    :param test_path: path to testing data
+    :param load_model: if true, load pretrained sequence model
+    :param saved_model: path to saved model 
     """
     if os.path.exists(exp_full_path) == False:
         os.mkdir(exp_full_path, 0o755)

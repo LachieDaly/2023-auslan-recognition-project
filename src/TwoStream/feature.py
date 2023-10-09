@@ -9,17 +9,12 @@ MobileNet and the resulting 1024 **features** saved to disc.
 """
 
 import os
-import glob
-import time
-import sys
-import warnings
 
 import numpy as np
 import pandas as pd
 import tensorflow as tf
 import keras
 from keras.applications.vgg16 import VGG16
-from keras.applications.resnet import ResNet50
 from keras.applications.xception import Xception
 from keras.applications.efficientnet import EfficientNetB0
 from keras import layers
@@ -32,7 +27,12 @@ from keras.models import Sequential
 from keras.layers.convolutional import (Conv1D, Conv2D, MaxPooling2D)
 
 def load_feature_extractor(di_feature:dict) -> keras.Model:
+    """
+    Loads and configures image feature extractor
 
+    :param di_feature: feature dictionary
+    :return: configured image feature extractor model
+    """
     model_name = di_feature["name"]
     print("Load 2D extraction model %s ..." % model_name)
 
@@ -155,6 +155,13 @@ def predict_features(frame_base_dir:str, features_base_dir:str, model:keras.Mode
     Used by the MobileNet-LSTM NN architecture.
     The (video) frames (2-dimensional) in frame_base_dir are fed into model (eg MobileNet without top layers)
     and the resulting features are saved to feature_base_dir
+
+    :param frame_base_dir: directory containing frame folders
+    :param features_base_dir: directory to save extracted features
+    :param model: cnn feature extractor
+    :param frames_norm: number of frames to extract
+    :param output_shape: UNUSED => output shape from cnn feature extractor
+    :param model_name: if noModel, don't feature extract
     """
     # prepare frame generator without shuffling
 
@@ -208,14 +215,12 @@ def features_2D_predict_generator_withResize(frame_base_dir:str, feature_base_di
     Used by the MobileNet-LSTM NN architecture.
     The (video) frames (2-dimensional) in frames_base_dir are fed into model (eg MobileNet without top layers)
     and the resulting features are save to feature_base_dir.
-    """
 
-    # do not (partially) overwrite existing feature directory
-    #if os.path.exists(feature_base_dir): 
-    #    warnings.warn("\nFeature folder " + feature_base_dir + " alredy exists, calculation stopped") 
-    #    return
-	
-	# Hamzah: Resize the images
+    :param frame_base_dir: base directory for frames folders
+    :param feature_base_dir: where to wsave generated features
+    :param model: feature extracting model
+    :param frames_norm: number of frames to extract
+    """
 	
     # prepare frame generator - without shuffling!
     _, h, w, c = model.input_shape
@@ -261,12 +266,12 @@ def features_3D_predict_generator(frames_base_dir:str, feature_base_dir:str,
     resulting features are saved to disc. 
     (Later these features are used to train a small model containing 
     only the adjusted I3D top layers.)
-    """
 
-    # do not (partially) overwrite existing feature directory
-    #if os.path.exists(feature_base_dir): 
-    #    warnings.warn("\nFeature folder " + feature_base_dir + " alredy exists, calculation stopped") 
-    #    return
+    :param frame_base_dir: base directory for frames folders
+    :param feature_base_dir: where to wsave generated features
+    :param model: feature extracting model
+    :param batch_size: batch size hyperparameter
+    """
 
     # prepare frame generator - without shuffling!
     _, frames_model, h, w, c = model.input_shape

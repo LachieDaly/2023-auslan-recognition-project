@@ -1,7 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
 import numpy as np
 import math
 from model.dropSke import DropBlock_Ske
@@ -9,6 +7,12 @@ from model.dropT import DropBlockT_1d
 
 
 def import_class(name):
+    """
+    import a pyton class given its name
+
+    :param name: name of the class to be retrieved
+    :return: module with attributes
+    """
     components = name.split('.')
     mod = __import__(components[0])
     for comp in components[1:]:
@@ -17,26 +21,52 @@ def import_class(name):
 
 
 def conv_branch_init(conv):
+    """
+    initialises convolutional branch
+
+    :param conv: convolution layer
+    """
     weight = conv.weight
     n = weight.size(0)
     k1 = weight.size(1)
     k2 = weight.size(2)
+    # sets weights and bias
     nn.init.normal(weight, 0, math.sqrt(2. / (n * k1 * k2)))
     nn.init.constant(conv.bias, 0)
 
 
 def conv_init(conv):
+    """
+    initialises convolution
+
+    :param conv: conv layer to initialise
+    """
     nn.init.kaiming_normal(conv.weight, mode='fan_out')
     nn.init.constant(conv.bias, 0)
 
 
 def bn_init(bn, scale):
+    """
+    batch normalisation initialise
+
+    :param bn: batch normalisation layer
+    """
     nn.init.constant(bn.weight, scale)
     nn.init.constant(bn.bias, 0)
 
 
 class unit_tcn(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=9, stride=1, num_point=25, block_size=41):
+        """
+        Initialises temporal convolutional layer layer?
+
+        :param in_channels: number of channels into the 2D convolutional layers
+        :param out_channels: number of channels out of the 2D convolutional layers
+        :param kernel_size: x size of the convolutional kernel
+        :param stride: stride of the convolutional kernel
+        :param num_point: number of skeleton points
+        :param block_size: size of the DropBlock
+        """
         super(unit_tcn, self).__init__()
         pad = int((kernel_size - 1) / 2)
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=(kernel_size, 1), padding=(pad, 0),
@@ -58,6 +88,14 @@ class unit_tcn(nn.Module):
 
 class unit_tcn_skip(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=9, stride=1):
+        """
+        initialises temporal convolutional layer skip unit (no dropblock ske or 1d?)
+
+        :param in_channels: number of channels into the convolutional layer
+        :param out_channels: number of channels exiting the convolutional layer
+        :param kernel_size: width of the kernel
+        :param stride: stride of the kernel
+        """
         super(unit_tcn_skip, self).__init__()
         pad = int((kernel_size - 1) / 2)
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=(kernel_size, 1), padding=(pad, 0),
@@ -75,14 +113,25 @@ class unit_tcn_skip(nn.Module):
 
 class unit_gcn(nn.Module):
     def __init__(self, in_channels, out_channels, A, groups, num_point, coff_embedding=4, num_subset=3):
+        """
+        initialises graph convolutional network unit
+
+        :param in_channels: channels entering downsampling conv layer and einsum thing
+        :param out_channel: cnn out channel from downsampling conv layer and entry into batch normalisation
+        :param A: adjacency matrix
+        :param groups: groups to repeat?
+        :param num_point: number of skeleton points
+        :param coff_embedding: unused
+        :param num_subset: number of times to multiply out_channel
+        """
         super(unit_gcn, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
         self.num_point = num_point
         self.groups = groups
         self.num_subset = num_subset
-        self.DecoupleA = nn.Parameter(torch.tensor(np.reshape(A.astype(np.float32), [
-                                      3, 1, num_point, num_point]), dtype=torch.float32, requires_grad=True).repeat(1, groups, 1, 1), requires_grad=True)
+        self.DecoupleA = nn.Parameter(torch.tensor(np.reshape(A.astype(np.float32), [3, 1, num_point, num_point]), 
+                                                   dtype=torch.float32, requires_grad=True).repeat(1, groups, 1, 1), requires_grad=True)
 
         if in_channels != out_channels:
             self.down = nn.Sequential(
@@ -105,6 +154,7 @@ class unit_gcn(nn.Module):
 
         self.Linear_weight = nn.Parameter(torch.zeros(
             in_channels, out_channels * num_subset, requires_grad=True, device='cuda'), requires_grad=True)
+        # set weights as a normal distribution
         nn.init.normal_(self.Linear_weight, 0, math.sqrt(
             0.5 / (out_channels * num_subset)))
 
@@ -119,6 +169,11 @@ class unit_gcn(nn.Module):
             eye_array), requires_grad=False, device='cuda'), requires_grad=False)  # [c,25,25]
 
     def norm(self, A):
+        """
+        normalise adjacency matrix
+
+        :param A: adjacency matrix:
+        """
         b, c, h, w = A.size()
         A = A.view(c, self.num_point, self.num_point)
         D_list = torch.sum(A, 1).view(c, 1, self.num_point)
@@ -133,8 +188,7 @@ class unit_gcn(nn.Module):
         norm_learn_A = torch.cat([self.norm(learn_A[0:1, ...]), self.norm(
             learn_A[1:2, ...]), self.norm(learn_A[2:3, ...])], 0)
 
-        x = torch.einsum(
-            'nctw,cd->ndtw', (x0, self.Linear_weight)).contiguous()
+        x = torch.einsum('nctw,cd->ndtw', (x0, self.Linear_weight)).contiguous()
         x = x + self.Linear_bias
         x = self.bn0(x)
 
@@ -150,6 +204,19 @@ class unit_gcn(nn.Module):
 
 class TCN_GCN_unit(nn.Module):
     def __init__(self, in_channels, out_channels, A, groups, num_point, block_size, stride=1, residual=True, attention=True):
+        """
+        Initialises Temporal Convolutional + Graph Convolutional Network
+
+        :param in_channels: number of channels into TCN
+        :param out_channels: number of channels out of TCN and into following layers
+        :param A: adjacency matrix
+        :param groups: number of feature groups
+        :param num_point: number of skeleton keypoints
+        :param block_size: size of the drop block
+        :param stride: stride of convolutions
+        :param residual: if true, pass residual to end of network
+        :param attention: if true, use attention segment
+        """
         super(TCN_GCN_unit, self).__init__()
         num_jpts = A.shape[-1]
         self.gcn1 = unit_gcn(in_channels, out_channels, A, groups, num_point)
@@ -160,15 +227,12 @@ class TCN_GCN_unit(nn.Module):
         self.A = nn.Parameter(torch.tensor(np.sum(np.reshape(A.astype(np.float32), [
                               3, num_point, num_point]), axis=0), dtype=torch.float32, requires_grad=False, device='cuda'), requires_grad=False)
 
-        if not residual:
-            self.residual = lambda x: 0
-
-        elif (in_channels == out_channels) and (stride == 1):
+        if not residual: # don't pass any residuals
+            self.residual = lambda x: 0 
+        elif (in_channels == out_channels) and (stride == 1): # pass it through without anything
             self.residual = lambda x: x
-
-        else:
-            self.residual = unit_tcn_skip(
-                in_channels, out_channels, kernel_size=1, stride=stride)
+        else: # otherwise pass residuals throughunit tcn skip
+            self.residual = unit_tcn_skip(in_channels, out_channels, kernel_size=1, stride=stride)
         self.dropSke = DropBlock_Ske(num_point=num_point)
         self.dropT_skip = DropBlockT_1d(block_size=block_size)
         self.attention = attention
@@ -201,13 +265,11 @@ class TCN_GCN_unit(nn.Module):
             se = y.mean(-2)  # N C V
             se1 = self.sigmoid(self.conv_sa(se))
             y = y * se1.unsqueeze(-2) + y
-            # a1 = se1.unsqueeze(-2)
 
             # temporal attention
             se = y.mean(-1)
             se1 = self.sigmoid(self.conv_ta(se))
             y = y * se1.unsqueeze(-1) + y
-            # a2 = se1.unsqueeze(-1)
 
             # channel attention
             se = y.mean(-1).mean(-1)
@@ -222,7 +284,20 @@ class TCN_GCN_unit(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(self, num_class=60, num_point=25, num_person=2, groups=8, block_size=41, graph=None, graph_args=dict(), in_channels=3):
+    
+    def __init__(self, num_class=29, num_point=27, num_person=1, groups=8, block_size=41, graph=None, graph_args=dict(), in_channels=3):
+        """
+        Initialises complete SL-GCN model
+
+        :param num_class: number of classes to be classified
+        :param num_point: number of skeleton points
+        :param num_person: number of people?
+        :param groups: number of feature groups
+        :param block_size: block size of drop graph
+        :param graph: graph to be imported
+        :param graph_args: graph arguments to be imported
+        :param in_channels: number of channels into TCN_GCN unit
+        """
         super(Model, self).__init__()
 
         if graph is None:
@@ -234,17 +309,14 @@ class Model(nn.Module):
         A = self.graph.A
         self.data_bn = nn.BatchNorm1d(num_person * in_channels * num_point)
 
-        self.l1 = TCN_GCN_unit(in_channels, 64, A, groups, num_point,
-                               block_size, residual=False)
+        self.l1 = TCN_GCN_unit(in_channels, 64, A, groups, num_point, block_size, residual=False)
         self.l2 = TCN_GCN_unit(64, 64, A, groups, num_point, block_size)
         self.l3 = TCN_GCN_unit(64, 64, A, groups, num_point, block_size)
         self.l4 = TCN_GCN_unit(64, 64, A, groups, num_point, block_size)
-        self.l5 = TCN_GCN_unit(
-            64, 128, A, groups, num_point, block_size, stride=2)
+        self.l5 = TCN_GCN_unit(64, 128, A, groups, num_point, block_size, stride=2)
         self.l6 = TCN_GCN_unit(128, 128, A, groups, num_point, block_size)
         self.l7 = TCN_GCN_unit(128, 128, A, groups, num_point, block_size)
-        self.l8 = TCN_GCN_unit(128, 256, A, groups,
-                               num_point, block_size, stride=2)
+        self.l8 = TCN_GCN_unit(128, 256, A, groups, num_point, block_size, stride=2)
         self.l9 = TCN_GCN_unit(256, 256, A, groups, num_point, block_size)
         self.l10 = TCN_GCN_unit(256, 256, A, groups, num_point, block_size)
 
@@ -253,18 +325,24 @@ class Model(nn.Module):
         bn_init(self.data_bn, 1)
 
     def forward(self, x, keep_prob=0.9):
+        # N = Number of people?
+        # C = Channels
+        # T = Temporal
+        # V = Vector
+        # M = Magnitude?
         N, C, T, V, M = x.size()
         x = x.permute(0, 4, 3, 1, 2).contiguous().view(N, M * V * C, T)
         x = self.data_bn(x)
-        x = x.view(N, M, V, C, T).permute(
-            0, 1, 3, 4, 2).contiguous().view(N * M, C, T, V)
+        x = x.view(N, M, V, C, T).permute(0, 1, 3, 4, 2).contiguous().view(N * M, C, T, V)
 
+        # Passed through multiple TCN_GCN layers
         x = self.l1(x, 1.0)
         x = self.l2(x, 1.0)
         x = self.l3(x, 1.0)
         x = self.l4(x, 1.0)
         x = self.l5(x, 1.0)
         x = self.l6(x, 1.0)
+        # These particular layers definiteyl are definitely dropping values
         x = self.l7(x, keep_prob)
         x = self.l8(x, keep_prob)
         x = self.l9(x, keep_prob)
@@ -273,10 +351,6 @@ class Model(nn.Module):
         # N*M,C,T,V
         c_new = x.size(1)
 
-        # print(x.size())
-        # print(N, M, c_new)
-
-        # x = x.view(N, M, c_new, -1)
         x = x.reshape(N, M, c_new, -1)
         x = x.mean(3).mean(1)
 

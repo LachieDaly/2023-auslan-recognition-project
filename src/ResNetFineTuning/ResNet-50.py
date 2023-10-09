@@ -223,7 +223,10 @@ for fold, (train_idx, test_idx) in enumerate(KFold.split(dataset)):
             y_true.extend(labels)
 
     # constant for classes
-    classes = ('Arrive', 'Bed', 'Bird', 'Boy', 'Come', 'Day', 'Deer', 'Frog', 'Girl', 'Good', 'Lady', 'Laugh', 'Man', 'Night', 'People', 'Rabbit', 'Real', 'Same', 'Say', 'Sheep', 'Slow', 'Sprint', 'Think', 'Tortoise', 'What', 'Where', 'Window', 'Wolf', 'Yell')
+    classes = ('Arrive', 'Bed', 'Bird', 'Boy', 'Come', 'Day', 'Deer', 'Frog', 'Girl', 
+               'Good', 'Lady', 'Laugh', 'Man', 'Night', 'People', 'Rabbit', 'Real', 
+               'Same', 'Say', 'Sheep', 'Slow', 'Sprint', 'Think', 'Tortoise', 'What', 
+               'Where', 'Window', 'Wolf', 'Yell')
     # Build confusion matrix
     cf_matrix = confusion_matrix(y_true, y_pred)
     df_cm = pd.DataFrame(cf_matrix, index = [i for i in classes],

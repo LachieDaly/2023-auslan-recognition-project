@@ -94,6 +94,9 @@ def flatten_key_points(hand_landmarks):
     return np.array([x_min, y_min, x_max, y_max])
 
 
+"""
+Code used to show the kind of data that is being displayed to the model
+"""
 cap = cv2.VideoCapture(0)
 with mp_hands.Hands(
     model_complexity=0,

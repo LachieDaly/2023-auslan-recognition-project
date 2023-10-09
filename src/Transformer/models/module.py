@@ -26,8 +26,12 @@ def get_model(**kwargs):
     return Module(**kwargs)
 
 class Module(pl.LightningModule):
-
     def __init__(self, model, **kwargs):
+        """
+        Initialises Module being used in training or predicting
+
+        :param model: the string name of the model to be chosen
+        """
         super().__init__()
 
         self.save_hyperparameters()
@@ -119,14 +123,23 @@ class Module(pl.LightningModule):
         return self.model(x)
     
     def training_step(self, batch, batch_idx):
+        """
+        Fairly typical training step for lightning model
+        """
+        # Data, Labels
         x, y = batch
+        # Prediction
         z = self.model(x)
+        # Calculate loss
         loss = self.criterion(z, y)
         self.log("train_loss", loss)
         self.log("train_accuracy", self.accuracy(z, y))
         return loss
     
     def validation_step(self, batch, batch_idx):
+        """
+        Fairly typical validation setp for lightning model
+        """
         x, y = batch
         z = self.model(x)
         loss = self.criterion(z, y)

@@ -38,8 +38,10 @@ if __name__ == "__main__":
 
     dict_args = vars(args)
 
+    # Gets our specific model
     model = module.get_model(**dict_args)
 
+    # Gets our specific dataloader
     dm = data_module.get_datamodule(**dict_args)
 
     logger = TensorBoardLogger(Path(args.log_dir), name=args.model)

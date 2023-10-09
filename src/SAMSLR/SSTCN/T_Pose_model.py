@@ -1,28 +1,32 @@
-import math
 import torch
 import torch.nn as nn
 from collections import OrderedDict
 import torch.nn.functional as F
 # groups == joints_number
 def channel_shuffle(x, groups):
+    """
+    
+    """
     batchsize, num_channels, height, width = x.data.size()
     channels_per_group = num_channels // groups
     
     # reshape
-    x = x.view(batchsize, groups,
-        channels_per_group, height, width)
+    x = x.view(batchsize, groups, channels_per_group, height, width)
 
-    # transpose
+    # So groups and channels per group are transposed
     # - contiguous() required if transpose() is used before view().
     #   See https://github.com/pytorch/pytorch/issues/764
     x = torch.transpose(x, 1, 2).contiguous()
 
     # flatten
     x = x.view(batchsize, -1, height, width)
-
     return x
+
 class swish(nn.Module):
-    def __init__(self, inplace=True):
+    def __init__(self):
+        """
+        initialises swish (sigmoid) layer
+        """
         super(swish, self).__init__()
         self.sigmoid = nn.Sigmoid()
 
@@ -30,13 +34,20 @@ class swish(nn.Module):
         return x * self.sigmoid(x)
     
 class Attention(nn.Module):
-    def __init__(self, channel, mid,groups):
+    def __init__(self, channel, mid, groups):
+        """
+        Initialises attention layer
+
+        :param channel: channels into first convolutional layer
+        :param mid: exit from first conv layer and input to second
+        :param groups: number of groups
+        """
         super(Attention, self).__init__()
         self.avg_pool = nn.AdaptiveAvgPool2d(1)
         self.conv_du = nn.Sequential(
-                nn.Conv2d(channel, mid, 1, padding=0,groups=groups, bias=True),
+                nn.Conv2d(channel, mid, 1, padding=0, groups=groups, bias=True),
                 nn.ReLU(inplace=True),
-                nn.Conv2d(mid, channel, 1, padding=0,groups=groups, bias=True),
+                nn.Conv2d(mid, channel, 1, padding=0, groups=groups, bias=True),
                 nn.Sigmoid()
         )
 
@@ -47,9 +58,14 @@ class Attention(nn.Module):
 
         
 def conv1x1(in_channels, out_channels, groups=133):
-    """1x1 convolution with padding
-    - Normal pointwise convolution When groups == 1
-    - Grouped pointwise convolution when groups > 1
+    """
+    Returns 1x1 convolutional layer with padding
+
+    :param in_channels: number of incoming channels
+    :param out_channels: number of outgoing channels
+    :param groups: Normal pointwise convolution When groups == 1, 
+                   Grouped pointwise convolution when groups > 1
+    :return: configured 1x1 Conv2D layer
     """
     return nn.Conv2d(
         in_channels,
@@ -57,12 +73,17 @@ def conv1x1(in_channels, out_channels, groups=133):
         kernel_size=1,
         groups=groups,
         stride=1,
-        padding = 0)
+        padding=0)
         
 def conv3x3(in_channels, out_channels, groups=1,stride=1):
-    """1x1 convolution with padding
-    - Normal pointwise convolution When groups == 1
-    - Grouped pointwise convolution when groups > 1
+    """
+    Returns 3x3 convolution with padding
+
+    :param in_channels: number of incoming channels
+    :param out_channels: number of outgoing channels
+    :param groups: Normal pointwise convolution When groups == 1
+                   Grouped pointwise convolution when groups > 1
+    :return: configured 3x3 Conv2D layer
     """
     return nn.Conv2d(
         in_channels,
@@ -70,13 +91,24 @@ def conv3x3(in_channels, out_channels, groups=1,stride=1):
         kernel_size=3,
         groups=groups,
         stride=stride,
-        padding = 1)
+        padding=1)
 
 def get_inplanes():
+    """
+    return list of inplane
+    """
     return [64, 128, 256, 512]
 
 class TemporalDownsampleBlock(nn.Module):
-    def __init__(self, in_planes, planes,joints_number,mid, relu = True, stride=1, downsample=None):
+    def __init__(self, in_planes, planes, joints_number, mid, relu=True):
+        """
+        Initialise Temporal Downsample Block
+
+        :param in_planes: in channels to 1x1 convolution
+        :param planes: out channels from the 1x1 convolution
+        :param joints_number: number of skeleton joints
+        :param mid: 
+        """
         super().__init__()
         # in_planes and planes are both n*joints_number, n is integer
         self.joints_number = joints_number
@@ -89,8 +121,17 @@ class TemporalDownsampleBlock(nn.Module):
             relu=relu
         )
 
-    def _make_grouped_conv1x1(self, in_channels, out_channels, groups, mid,
-        batch_norm=True, relu=False):
+    def _make_grouped_conv1x1(self, in_channels, out_channels, groups, mid, batch_norm=True, relu=False):
+        """
+        Initialises grouped conv1x1 layer
+
+        :param in_channels: channels into convolutional layer
+        :param out_channels: channels out of convolutional layer
+        :param groups: groups into conv layer
+        :param mid: middle channels of attention
+        :param batch_norm: if True, peform batch normalisation
+        :param relu: if True, add swish layer
+        """
         modules = OrderedDict()
         attention = Attention(in_channels, mid, groups=groups)
         modules['attention'] = attention
@@ -112,7 +153,18 @@ class TemporalDownsampleBlock(nn.Module):
         
 class FrameDownsampleBlock(nn.Module):
 
-    def __init__(self, in_planes, planes, frames,mid, relu = True, stride=1, downsample=None):
+    def __init__(self, in_planes, planes, frames, mid, relu=True, stride=1):
+        """
+        Initialise Frame Downsample Block
+
+        :param in_planes: input channels into 3x3 conv layer
+        :param planes: output channels from 3x3 conv layer
+        :param frames: number of frames (groups)
+        :param mid: mid channels in attention
+        :param relu: if True, add swish layer
+        :param stride: stride of convolutional layers
+        :return: Frame Downsample Block
+        """
         super().__init__()
         # in_planes and planes are both n*joints_number, n is integer
         self.frames = frames
@@ -127,9 +179,19 @@ class FrameDownsampleBlock(nn.Module):
             relu=relu
         )
 
-    def _make_grouped_conv3x3(self, in_channels, out_channels, groups, mid, stride,
-        batch_norm=True, relu=False):
+    def _make_grouped_conv3x3(self, in_channels, out_channels, groups, mid, stride, batch_norm=True, relu=False):
+        """
+        Build 3x3 conv block
 
+        :param in_channels: input channels into 3x3 conv layer
+        :param out_channels: output channels from 3x3 conv layer
+        :param groups: number of groups
+        :param mid: mid channels in attention
+        :param stride: stride of convolutional layers
+        :param batch_norm: if True, perform batch normalisation
+        :param relu: if True, add swish layer
+        :return: Frame Downsample Block
+        """
         modules = OrderedDict()
         attention = Attention(in_channels, mid, groups=groups)
         modules['attention'] = attention
@@ -151,7 +213,15 @@ class FrameDownsampleBlock(nn.Module):
 
 class T_Pose_model(nn.Module):
 
-    def __init__(self,frames_number,joints_number,n_classes=226):
+    def __init__(self, frames_number, joints_number, n_classes=29):
+        """
+        Initialise SSTCN model
+
+        :param frames_number: number of video frames
+        :param joint_number: number of skeleton joints
+        :param n_classes: number of classes to classify
+        :return: SSTCN model
+        """
         super().__init__()
         self.in_channels = frames_number
         self.joints_number = joints_number
@@ -161,15 +231,23 @@ class T_Pose_model(nn.Module):
 
         self.swish = swish()
 
+        # Temporal Downsamples
         self.t1downsample = TemporalDownsampleBlock(self.in_channels, 
-                                                    frames_number, 1, 10)
-        self.t2downsample = TemporalDownsampleBlock(frames_number, self.final_frames_number, 
-                                                    1, 10, 
+                                                    frames_number, 
+                                                    1, 
+                                                    10)
+        
+        self.t2downsample = TemporalDownsampleBlock(frames_number, 
+                                                    self.final_frames_number, 
+                                                    1, 
+                                                    10, 
                                                     relu=False)
 
+        # Spatial Downsamples
         self.f1downsample = FrameDownsampleBlock(self.final_frames_number * joints_number,
                                                  self.final_frames_number * joints_number,
-                                                 joints_number,joints_number * 10)
+                                                 joints_number, 
+                                                 joints_number * 10)
 
         self.f2downsample = FrameDownsampleBlock(self.final_frames_number * joints_number,
                                                  self.final_frames_number*joints_number,
@@ -189,11 +267,14 @@ class T_Pose_model(nn.Module):
 
         self.f5downsample = FrameDownsampleBlock(self.final_frames_number * joints_number,
                                                  self.final_frames_number * joints_number, 
-                                                 1, 10 * 10)
+                                                 1, 
+                                                 10 * 10)
 
         self.f6downsample = FrameDownsampleBlock(self.final_frames_number * joints_number, 
                                                  30 * joints_number, 
-                                                 1, 10 * 10)
+                                                 1,
+                                                 10 * 10)
+        
         self.dropout = nn.Dropout2d(0.333)
 
         self.fc1 = nn.Linear(990, n_classes)
@@ -203,20 +284,20 @@ class T_Pose_model(nn.Module):
         x = self.bn(x)
         x = self.swish(x)
         res = x
-        x = x.view(-1, self.in_channels, self.joints_number * height,width)
+        x = x.view(-1, self.in_channels, self.joints_number * height, width)
         x = self.t1downsample(x)
         x = self.t2downsample(x)
-        x = x.view(-1,self.final_frames_number*self.joints_number,height,width)
+        x = x.view(-1, self.final_frames_number * self.joints_number, height, width)
         x = res + x
         x = self.swish(x)
         res = x
 
-        x = channel_shuffle(x,self.final_frames_number)
+        x = channel_shuffle(x, self.final_frames_number)
         x = self.f1downsample(x)
         x = self.dropout(x)
         x = self.f2downsample(x)
 
-        x = channel_shuffle(x,self.joints_number)
+        x = channel_shuffle(x, self.joints_number)
         x = x + res
         x = self.swish(x)
         res = x
@@ -235,6 +316,9 @@ class T_Pose_model(nn.Module):
         return x
 
     def init_weights(self):
+        """
+        Initialise the SSTCN model weights
+        """
         for m in self.modules():
             if isinstance(m, nn.Conv2d):
                 nn.init.kaiming_normal_(m.weight, mode='fan_out')

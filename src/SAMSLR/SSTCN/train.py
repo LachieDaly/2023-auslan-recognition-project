@@ -1,7 +1,6 @@
 import torch
 import sys
 import numpy as np
-import itertools
 from T_Pose_model import *
 from load_newfeature import *
 from torch.utils.data import DataLoader

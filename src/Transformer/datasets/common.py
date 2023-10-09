@@ -1,13 +1,19 @@
 import csv
-import glob
 import os
-from pathlib import Path
 
 def collect_samples(has_labels, root_path, job_path, sequence_length, 
                     temporal_stride, job, label_file_path, retrain_all=False):
     """
-    Return a list of sample paths, labels, and frame indices based on
-    supplied csv
+    Collects the required samples paths, labels, and frame indices
+
+    :param has_labels: no longer fully necessary. should always be true
+    :param root_path: path to the video directory
+    :param job_path: train/val/test path - will be just train
+    :param sequence_length: number of frames required
+    :param temporal_stride: distance between selected frames
+    :param job:  train or val 
+    :param label_file_path: path to the label csv
+    :return: sample list of dictionary of video_file, label, and frame indicies
     """
     if has_labels:  
         with open(label_file_path) as label_file:

@@ -1,7 +1,5 @@
 import torch
 import torch.nn as nn
-import torch.nn.functional as F
-from torch.autograd import Variable
 import numpy as np
 import math
 from model.dropSke import DropBlock_Ske
@@ -9,14 +7,24 @@ from model.dropT import DropBlockT_1d
 
 
 def import_class(name):
+    """
+    import a pyton class given its name
+
+    :param name: name of the class to be retrieved
+    :return: module with attributes
+    """
     components = name.split('.')
     mod = __import__(components[0])
     for comp in components[1:]:
         mod = getattr(mod, comp)
     return mod
 
-
 def conv_branch_init(conv):
+    """
+    initialises convolutional branch
+
+    :param conv: convolution layer
+    """
     weight = conv.weight
     n = weight.size(0)
     k1 = weight.size(1)
@@ -24,19 +32,37 @@ def conv_branch_init(conv):
     nn.init.normal(weight, 0, math.sqrt(2. / (n * k1 * k2)))
     nn.init.constant(conv.bias, 0)
 
-
 def conv_init(conv):
+    """
+    initialises convolution
+
+    :param conv: conv layer to initialise
+    """
     nn.init.kaiming_normal(conv.weight, mode='fan_out')
     nn.init.constant(conv.bias, 0)
 
-
 def bn_init(bn, scale):
+    """
+    batch normalisation initialise
+
+    :param bn: batch normalisation layer
+    """
     nn.init.constant(bn.weight, scale)
     nn.init.constant(bn.bias, 0)
 
-
 class unit_tcn(nn.Module):
+
     def __init__(self, in_channels, out_channels, kernel_size=9, stride=1, num_point=25, block_size=41):
+        """
+        Initialises temporal convolutional layer layer?
+
+        :param in_channels: number of channels into the 2D convolutional layers
+        :param out_channels: number of channels out of the 2D convolutional layers
+        :param kernel_size: x size of the convolutional kernel
+        :param stride: stride of the convolutional kernel
+        :param num_point: number of skeleton points
+        :param block_size: size of the DropBlock
+        """
         super(unit_tcn, self).__init__()
         pad = int((kernel_size - 1) / 2)
         self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=(kernel_size, 1), padding=(pad, 0),
@@ -55,12 +81,22 @@ class unit_tcn(nn.Module):
         x = self.dropT(self.dropS(x, keep_prob, A), keep_prob)
         return x
 
-
 class unit_tcn_skip(nn.Module):
     def __init__(self, in_channels, out_channels, kernel_size=9, stride=1):
+        """
+        initialises temporal convolutional layer skip unit (no dropblock ske or 1d?)
+
+        :param in_channels: number of channels into the convolutional layer
+        :param out_channels: number of channels exiting the convolutional layer
+        :param kernel_size: width of the kernel
+        :param stride: stride of the kernel
+        """
         super(unit_tcn_skip, self).__init__()
         pad = int((kernel_size - 1) / 2)
-        self.conv = nn.Conv2d(in_channels, out_channels, kernel_size=(kernel_size, 1), padding=(pad, 0),
+        self.conv = nn.Conv2d(in_channels, 
+                              out_channels, 
+                              kernel_size=(kernel_size, 1), 
+                              padding=(pad, 0),
                               stride=(stride, 1))
 
         self.bn = nn.BatchNorm2d(out_channels)
@@ -72,9 +108,19 @@ class unit_tcn_skip(nn.Module):
         x = self.bn(self.conv(x))
         return x
 
-
 class unit_gcn(nn.Module):
     def __init__(self, in_channels, out_channels, A, groups, num_point, coff_embedding=4, num_subset=3):
+        """
+        initialises graph convolutional network unit
+
+        :param in_channels: channels entering downsampling conv layer and einsum thing
+        :param out_channel: cnn out channel from downsampling conv layer and entry into batch normalisation
+        :param A: adjacency matrix
+        :param groups: groups to repeat?
+        :param num_point: number of skeleton points
+        :param coff_embedding: unused
+        :param num_subset: number of times to multiply out_channel
+        """
         super(unit_gcn, self).__init__()
         self.in_channels = in_channels
         self.out_channels = out_channels
@@ -119,6 +165,11 @@ class unit_gcn(nn.Module):
             eye_array), requires_grad=False, device='cuda'), requires_grad=False)  # [c,25,25]
 
     def norm(self, A):
+        """
+        normalise adjacency matrix
+
+        :param A: adjacency matrix:
+        """
         b, c, h, w = A.size()
         A = A.view(c, self.num_point, self.num_point)
         D_list = torch.sum(A, 1).view(c, 1, self.num_point)
@@ -150,6 +201,19 @@ class unit_gcn(nn.Module):
 
 class TCN_GCN_unit(nn.Module):
     def __init__(self, in_channels, out_channels, A, groups, num_point, block_size, stride=1, residual=True, attention=True):
+        """
+        Initialises Temporal Convolutional + Graph Convolutional Network
+
+        :param in_channels: number of channels into TCN
+        :param out_channels: number of channels out of TCN and into following layers
+        :param A: adjacency matrix
+        :param groups: number of feature groups
+        :param num_point: number of skeleton keypoints
+        :param block_size: size of the drop block
+        :param stride: stride of convolutions
+        :param residual: if true, pass residual to end of network
+        :param attention: if true, use attention segment
+        """
         super(TCN_GCN_unit, self).__init__()
         num_jpts = A.shape[-1]
         self.gcn1 = unit_gcn(in_channels, out_channels, A, groups, num_point)
@@ -201,20 +265,17 @@ class TCN_GCN_unit(nn.Module):
             se = y.mean(-2)  # N C V
             se1 = self.sigmoid(self.conv_sa(se))
             y = y * se1.unsqueeze(-2) + y
-            # a1 = se1.unsqueeze(-2)
 
             # temporal attention
             se = y.mean(-1)
             se1 = self.sigmoid(self.conv_ta(se))
             y = y * se1.unsqueeze(-1) + y
-            # a2 = se1.unsqueeze(-1)
 
             # channel attention
             se = y.mean(-1).mean(-1)
             se1 = self.relu(self.fc1c(se))
             se2 = self.sigmoid(self.fc2c(se1))
             y = y * se2.unsqueeze(-1).unsqueeze(-1) + y
-            # a3 = se2.unsqueeze(-1).unsqueeze(-1)
             
         y = self.tcn1(y, keep_prob, self.A)
         x_skip = self.dropT_skip(self.dropSke(self.residual(x), keep_prob, self.A), keep_prob)
@@ -222,7 +283,19 @@ class TCN_GCN_unit(nn.Module):
 
 
 class Model(nn.Module):
-    def __init__(self, num_class=60, num_point=25, num_person=2, groups=8, block_size=41, graph=None, graph_args=dict(), in_channels=3):
+    def __init__(self, num_class=29, num_point=27, num_person=1, groups=8, block_size=41, graph=None, graph_args=dict(), in_channels=3):
+        """
+        Initialises complete SL-GCN model
+
+        :param num_class: number of classes to be classified
+        :param num_point: number of skeleton points
+        :param num_person: number of people?
+        :param groups: number of feature groups
+        :param block_size: block size of drop graph
+        :param graph: graph to be imported
+        :param graph_args: graph arguments to be imported
+        :param in_channels: number of channels into TCN_GCN unit
+        """
         super(Model, self).__init__()
 
         if graph is None:
@@ -234,17 +307,14 @@ class Model(nn.Module):
         A = self.graph.A
         self.data_bn = nn.BatchNorm1d(num_person * in_channels * num_point)
 
-        self.l1 = TCN_GCN_unit(in_channels, 64, A, groups, num_point,
-                               block_size, residual=False)
+        self.l1 = TCN_GCN_unit(in_channels, 64, A, groups, num_point, block_size, residual=False)
         self.l2 = TCN_GCN_unit(64, 64, A, groups, num_point, block_size)
         self.l3 = TCN_GCN_unit(64, 64, A, groups, num_point, block_size)
         self.l4 = TCN_GCN_unit(64, 64, A, groups, num_point, block_size)
-        self.l5 = TCN_GCN_unit(
-            64, 128, A, groups, num_point, block_size, stride=2)
+        self.l5 = TCN_GCN_unit(64, 128, A, groups, num_point, block_size, stride=2)
         self.l6 = TCN_GCN_unit(128, 128, A, groups, num_point, block_size)
         self.l7 = TCN_GCN_unit(128, 128, A, groups, num_point, block_size)
-        self.l8 = TCN_GCN_unit(128, 256, A, groups,
-                               num_point, block_size, stride=2)
+        self.l8 = TCN_GCN_unit(128, 256, A, groups, num_point, block_size, stride=2)
         self.l9 = TCN_GCN_unit(256, 256, A, groups, num_point, block_size)
         self.l10 = TCN_GCN_unit(256, 256, A, groups, num_point, block_size)
 
@@ -262,8 +332,7 @@ class Model(nn.Module):
         N, C, T, V, M = x.size()
         x = x.permute(0, 4, 3, 1, 2).contiguous().view(N, M * V * C, T)
         x = self.data_bn(x)
-        x = x.view(N, M, V, C, T).permute(
-            0, 1, 3, 4, 2).contiguous().view(N * M, C, T, V)
+        x = x.view(N, M, V, C, T).permute(0, 1, 3, 4, 2).contiguous().view(N * M, C, T, V)
 
         x = self.l1(x, 1.0)
         x = self.l2(x, 1.0)
@@ -283,10 +352,6 @@ class Model(nn.Module):
         se = x.mean(-1)
         se1 = self.sigmoid(self.conv_ta(se))
         x = x * se1.unsqueeze(-1) + x
-
-
-        # print(x.size())
-        # print(N, M, c_new)
 
         # x = x.view(N, M, c_new, -1)
         x = x.reshape(N, M, c_new, -1)

@@ -3,7 +3,15 @@ import numpy as np
 import os
 from wholepose.utils import plot_pose
 
-def crop(image, center, radius, frame_length, frame_height, size=512):
+def crop(image, center, radius, frame_length, frame_height):
+    """
+    Crops an image 
+
+    :param image: image to be cropped
+    :param center: the new center of the image
+    :param radius: the radius from the center to remain within the crop
+    :return: cropped image
+    """
     scale = 1.3
     radius_crop = (radius * scale).astype(np.int32)
     center_crop = (center).astype(np.int32)

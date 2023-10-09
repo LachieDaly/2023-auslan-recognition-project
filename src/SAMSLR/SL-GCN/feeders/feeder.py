@@ -15,6 +15,7 @@ class Feeder(Dataset):
                  window_size=-1, normalization=False, debug=False, use_mmap=True, random_mirror=False, random_mirror_p=0.5, is_vector=False):
         """
         
+
         :param data_path: 
         :param label_path: 
         :param random_choose: If true, randomly choose a portion of the input sequence
@@ -45,7 +46,6 @@ class Feeder(Dataset):
 
     def load_data(self):
         # data: N C V T M
-
         try:
             with open(self.label_path) as f:
                 self.sample_name, self.label = pickle.load(f)

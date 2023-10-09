@@ -315,6 +315,7 @@ blocks_dict = {
 class PoseHighResolutionNet(nn.Module):
 
     def __init__(self, cfg, **kwargs):
+        
         self.inplanes = 64
         extra = cfg.MODEL.EXTRA
         super(PoseHighResolutionNet, self).__init__()

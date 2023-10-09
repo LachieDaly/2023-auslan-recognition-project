@@ -10,7 +10,6 @@ import glob
 import warnings
 import random
 from subprocess import check_output
-import re
 
 import numpy as np
 import pandas as pd
@@ -18,6 +17,13 @@ import pandas as pd
 import cv2
 
 def resize_image(image:np.array, min_dim:int=256) -> np.array:
+    """
+    resizes supplied image by min dimension
+
+    :param image: numpy array representing image
+    :param min_dim: dimension to resize to
+    :return: resized image
+    """
     height, width, _ = image.shape
 
     if width >= height:
@@ -30,7 +36,13 @@ def resize_image(image:np.array, min_dim:int=256) -> np.array:
 
     return image
 
-def resize_images(images:np.array, min_dim:int=256) -> np.array:
+def resize_images(images:np.array) -> np.array:
+    """
+    resizes multiple images
+
+    :param images: numpy array of images
+    :return: numpy array of resized images
+    """
     num_images, _, _, _ = images.shape
     image_list = []
     for i in range(num_images):
@@ -39,6 +51,12 @@ def resize_images(images:np.array, min_dim:int=256) -> np.array:
     return np.array(image_list)
 
 def resize_images_v2(images:np.array, min_dim:int=256) -> np.array:
+    """
+    resizes multiple images
+
+    :param images: numpy array of images
+    :return: numpy array of resized images
+    """
     num_images, _, _, _ = images.shape
     image_list = []
     for i in range(num_images):
@@ -47,15 +65,27 @@ def resize_images_v2(images:np.array, min_dim:int=256) -> np.array:
     return np.array(image_list)
 
 def resize_images_v3(images:np.array, min_dim:int=256) -> np.array:
+    """
+    resizes multiple images
+
+    :param images: numpy array of images
+    :return: numpy array of resized images
+    """
     num_images, _, _, _ = images.shape
     image_list = []
     for i in range(num_images):
-        image = cv2.resize(images[i, ...], dsize=(min_dim,min_dim))
+        image = cv2.resize(images[i, ...], dsize=(min_dim, min_dim))
         image_list.append(image)
     return np.array(image_list)
 
 
 def rgb_to_gray(images:np.array, min_dim:int=256) -> np.array:
+    """
+    converts rgb images to grey
+
+    :param images: numpy array of images
+    :return: numpy array of images coverted to grayscale
+    """
     num_images, _, _, _ = images.shape
     image_list = []
     for i in range(num_images):
@@ -70,6 +100,10 @@ def video_to_frames(video_path:str, resize_min_dim:int) -> np.array:
 
     if resize_min_dim != None: frames are resized preserving aspect ratio
     so that the smallest dimension is eg 256 pixels, with bilinear interpolation
+
+    :param video_path: path to video
+    :param resize_min_dim: resize dimension
+    :return: numpy array of frames
     """
     video = cv2.VideoCapture(video_path)
     if (video.isOpened() == False):
@@ -95,13 +129,21 @@ def frames_to_files(frames:np.array, target_dir:str):
     """
     Write array of frames to png files
     Input: frames = (number of frames, height, width, depth)
+
+    :param frames: array of image frames
+    :param target_dir: directory to save frame files
     """
     os.makedirs(target_dir, exist_ok=True)
     for frame in range(frames.shape[0]):
         cv2.imwrite(target_dir + "/frame%04d.png" % frame, frames[frame, :, :, :])
     return
 
-def files_to_frames(path:str, convert_to_graph:bool=False, resize_img:bool=False) -> np.array:
+def files_to_frames(path:str) -> np.array:
+    """
+    load files from folder into frames
+
+    :param path: folder path to png frames
+    """
     files = sorted(glob.glob(path + "/*.png"))
     if len(files) == 0:
         raise ValueError("No frames found in " + path)
@@ -119,6 +161,10 @@ def frames_downsample(frames:np.array, frames_target:int) -> np.array:
     """
     Adjust number of frames (eg 123) to frames_target (eg 79)
     works also if originally less frames then frames_target
+
+    :param frames: frame array to downsample
+    :param frames_target: target frame count
+    :return: set of frames either downsampled or upsampled
     """
     print(frames.shape, frames_target)
     sample_num, _, _, _ = frames.shape
@@ -134,14 +180,19 @@ def frames_downsample(frames:np.array, frames_target:int) -> np.array:
 def crop_image(frame, height_target, width_target) -> np.array:
     """
     Crop 1 frame to specified size, choose centered image
+
+    :param frame: frame to crop
+    :param height_target: height to crop to
+    :param width_target: width to crop to
+    :return: cropped np image
     """
     height, width, _ = frame.shape
 
     if (height < height_target) or (width < width_target):
         raise ValueError("Image height/width too small to crop to target size")
 
-    x = int(width/2 - width_target/2)
-    y = int(height/2 - height_target/2)
+    x = int(width / 2 - width_target / 2)
+    y = int(height / 2 - height_target / 2)
 
     frame = frame[y:y+height_target, x:x+width_target, :]
 
@@ -150,6 +201,11 @@ def crop_image(frame, height_target, width_target) -> np.array:
 def crop_images(frames:np.array, height_target, width_target) -> np.array:
     """
     Crop each frame in array to specified size, choose centered image
+
+    :param frames: np array of frames to crop
+    :param height_target: height to crop to
+    :param width_target: width to crop to
+    :return: cropped frames array
     """
     sample_num, height, width, depth = frames.shape
 
@@ -166,39 +222,49 @@ def crop_images(frames:np.array, height_target, width_target) -> np.array:
 def normalise_images(frames:np.array) -> np.array(float):
     """
     Rescale array of images (rgb 0-255) to [-1.0, 1.0]
-    """
 
+    :param frames: frames array to normalise
+    :return: normalised frames array
+    """
     normalised_frames = frames / 127.5
     normalised_frames -= 1.
 
     return normalised_frames
 
-def process_images(frames:np.array, frame_num:int, height:int, width:int, rescale:bool=True) -> np.array(float):
+def process_images(frames:np.array, frame_num:int, height:int, width:int, normalise:bool=True) -> np.array(float):
     """
     All processing
         - downsample number of frames
         - crop to centered image
         - rescale rgb 0-255 value to [-1.0, 1.0] - only if rescale == True
+
+    :param frames: numpy frames array
+    :param frame_num: number of frames to collect
+    :param height: height to crop images
+    :param width: width to crop images
+    :param normalise:  normalise image
+    :return: processed frames
     """
     frames = frames_downsample(frames, frame_num)
 
     frames = crop_images(frames, height, width)
 
-    if rescale:
+    if normalise:
         frames = normalise_images(frames)
     elif np.max(np.abs(frames)) > 1.0:
         warnings.warn("images not normalised")
 
     return frames
 
-def images_normalize_withGrayscale(frames:np.array, frame_num:int, height:int, width:int, rescale:bool = True) -> np.array(float):
+def images_normalize_withGrayscale(frames:np.array, frame_num:int, height:int, width:int, rescale:bool=True) -> np.array(float):
     """ Several image normalizations/preprocessing: 
-        - downsample number of frames
-        - crop to centered image
-        - rescale rgb 0-255 value to [-1.0, 1.0] - only if bRescale == True
-		- Convert to gray and resize
-		- Convert it tp 1-D
-    Returns array of floats
+
+    :param frames: numpy frames array
+    :param frame_num: number of frames to collect
+    :param height: height to crop images
+    :param width: width to crop images
+    :param normalise: if true, normalise image
+    :return: processed grayscale frames
     """
 
     # normalize the number of frames (assuming typically downsampling)
@@ -229,23 +295,31 @@ def frames_show(frames:np.array, wait_milliseconds:int = 100):
     return
 
 def video_length(video_path:str) -> float:
+    """
+    calculate video length of file
+
+    :param video_path: path to video
+    :return: length of video
+    """
     print(video_path)
     return int(check_output(['mediainfo', '--Inform=Video;%Duration%', video_path]))/1000.0
 
-def video_dir_to_frames_dir(video_dir:str, frame_dir:str, frames_norm:int = None, 
-    resize_min_dim:int = None, crop_shape:tuple = None, classes:int = None):
+def video_dir_to_frames_dir(video_dir:str, frame_dir:str, frames_norm:int=None, 
+    resize_min_dim:int=None, crop_shape:tuple=None, classes:int=None):
     """ Extract frames from videos 
     
     Input video structure:
     ... video_dir / train / class001 / videoname.avi
     Output:
     ... frame_dir / train / class001 / videoname / frames.png
-    """
 
-    # do not (partially) overwrite existing frame directory
-    #if os.path.exists(frame_dir): 
-    #    warnings.warn("Frame folder " + frame_dir + " already exists, frame extraction stopped")
-    #    return 
+    :param video_dir: base video directory to collect videos from
+    :param frame_dir: base frame directory to save frames to
+    :param frames_norm: number of frames to collect
+    :param resize_min_dim: resize min dimension and preserve aspect ratio
+    :param crop_shape: tuple containing width and height crop parameters
+    :param classes: number of classes
+    """
 
     # get videos. Assume video_dir / train / class / video.mp4
     videos_df = pd.DataFrame(sorted(glob.glob(video_dir + "/*/*/*.*")), columns=["video_path"])
@@ -312,7 +386,13 @@ def video_dir_to_frames_dir(video_dir:str, frame_dir:str, frames_norm:int = None
     return
 
 
-def unittest(video_dir, nSamples = 100):
+def unittest(video_dir, n_samples=100):
+    """
+    Testing our algorithms without saving anything
+
+    :param video_dir: video directory to pull videos from
+    :param n_samples: samples to collect
+    """
     print("\nAnalyze video durations and fps from %s ..." % (video_dir))
     print(os.getcwd())
 
@@ -321,7 +401,7 @@ def unittest(video_dir, nSamples = 100):
     if len(videos) == 0: raise ValueError("No videos detected")
 
     video_sec_sum, frames_count_sum = 0, 0
-    for i in range(nSamples):
+    for i in range(n_samples):
         video_path = random.choice(videos)
         #print("Video %s" % video_path)
 
@@ -339,6 +419,6 @@ def unittest(video_dir, nSamples = 100):
         print("%2d: Shape %s, duration %.1f sec, fps %.1f" % (i, str(frames.shape), video_sec, fps))
 
     count = i+1
-    print("%d samples: Average video duration %.1f sec, fps %.1f" % (nSamples, video_sec_sum / count, frames_count_sum / video_sec_sum))
+    print("%d samples: Average video duration %.1f sec, fps %.1f" % (n_samples, video_sec_sum / count, frames_count_sum / video_sec_sum))
 
     return

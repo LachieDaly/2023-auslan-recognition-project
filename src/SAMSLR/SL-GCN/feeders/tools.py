@@ -4,19 +4,37 @@ import numpy as np
 
 
 def downsample(data_numpy, step, random_sample=True):
-    # input: C,T,V,M
+    """
+    Downsample the supplied 4 dimensional np array
+
+    :param data_numpy: np array to be downsampled
+    :param step: step between selected data points
+    :param random_sample: if true, start downsampling from random index less than equal than step
+    :return: downsampled array
+    """
+    # input: C, T, V, M
     begin = np.random.randint(step) if random_sample else 0
     return data_numpy[:, begin::step, :, :]
 
 
 def temporal_slice(data_numpy, step):
-    # input: C,T,V,M
+    """
+    
+    """
+    # input: C, T, V, M
     C, T, V, M = data_numpy.shape
     return data_numpy.reshape(C, T / step, step, V, M).transpose(
         (0, 1, 3, 2, 4)).reshape(C, T / step, V, step * M)
 
 
 def mean_subtractor(data_numpy, mean):
+    """
+    Subtract mean from supplied numpy data
+
+    :param data_numpy: C, T, V, M np array to modify
+    :param mean: 4 dimension mean array to subtract
+    :return: numpy array with subtracted value
+    """
     # input: C,T,V,M
     # naive version
     if mean == 0:
@@ -29,25 +47,41 @@ def mean_subtractor(data_numpy, mean):
     return data_numpy
 
 
-def auto_pading(data_numpy, size, random_pad=False):
+def auto_padding(data_numpy, size, random_pad=False):
+    """
+    pad zeros along numpy array
+
+    :param data_numpy: np array to pad
+    :param size: size to pad array to
+    :param random_pad: If true, padding will be randomly grouped at start and end
+    :return: padded numpy data
+    """
     C, T, V, M = data_numpy.shape
     if T < size:
         begin = random.randint(0, size - T) if random_pad else 0
-        data_numpy_paded = np.zeros((C, size, V, M))
-        data_numpy_paded[:, begin:begin + T, :, :] = data_numpy
-        return data_numpy_paded
+        data_numpy_padded = np.zeros((C, size, V, M))
+        data_numpy_padded[:, begin:begin + T, :, :] = data_numpy
+        return data_numpy_padded
     else:
         return data_numpy
 
 
 def random_choose(data_numpy, size, auto_pad=True):
-    # input: C,T,V,M 随机选择其中一段，不是很合理。因为有0
+    """
+    randomly choose section from numpy data
+
+    :param data_numpy: data to be randomly chosen from
+    :param size: section size to choose
+    :param auto_pad: if true, pad data if below size
+    :return: randomly chosen section of numpy array
+    """
+    # input: C,T,V,M
     C, T, V, M = data_numpy.shape
     if T == size:
         return data_numpy
     elif T < size:
         if auto_pad:
-            return auto_pading(data_numpy, size, random_pad=True)
+            return auto_padding(data_numpy, size, random_pad=True)
         else:
             return data_numpy
     else:
@@ -60,6 +94,15 @@ def random_move(data_numpy,
                 scale_candidate=[0.9, 1.0, 1.1],
                 transform_candidate=[-0.2, -0.1, 0.0, 0.1, 0.2],
                 move_time_candidate=[1]):
+    """
+    randomly modify positions in skeleton data array
+
+    :param angle_candidate: potential angle modification candidates
+    :param scale_candidate: potential scale modification candidates
+    :param transform_candidates: potential x and y modification candidates
+    :param move_time_candidates: currently tested with 1
+    :return: np data with randomly moved points
+    """
     # input: C,T,V,M
     C, T, V, M = data_numpy.shape
     move_time = random.choice(move_time_candidate)
@@ -79,31 +122,32 @@ def random_move(data_numpy,
 
     # linspace
     for i in range(num_node - 1):
-        a[node[i]:node[i + 1]] = np.linspace(
-            A[i], A[i + 1], node[i + 1] - node[i]) * np.pi / 180
-        s[node[i]:node[i + 1]] = np.linspace(S[i], S[i + 1],
-                                             node[i + 1] - node[i])
-        t_x[node[i]:node[i + 1]] = np.linspace(T_x[i], T_x[i + 1],
-                                               node[i + 1] - node[i])
-        t_y[node[i]:node[i + 1]] = np.linspace(T_y[i], T_y[i + 1],
-                                               node[i + 1] - node[i])
+        a[node[i]:node[i + 1]] = np.linspace(A[i], A[i + 1], node[i + 1] - node[i]) * np.pi / 180
+        s[node[i]:node[i + 1]] = np.linspace(S[i], S[i + 1], node[i + 1] - node[i])
+        t_x[node[i]:node[i + 1]] = np.linspace(T_x[i], T_x[i + 1], node[i + 1] - node[i])
+        t_y[node[i]:node[i + 1]] = np.linspace(T_y[i], T_y[i + 1], node[i + 1] - node[i])
 
-    theta = np.array([[np.cos(a) * s, -np.sin(a) * s],
-                      [np.sin(a) * s, np.cos(a) * s]])  # xuanzhuan juzhen
+    theta = np.array([[np.cos(a) * s, -np.sin(a) * s], [np.sin(a) * s, np.cos(a) * s]]) 
 
     # perform transformation
     for i_frame in range(T):
         xy = data_numpy[0:2, i_frame, :, :]
         new_xy = np.dot(theta[:, :, i_frame], xy.reshape(2, -1))
         new_xy[0] += t_x[i_frame]
-        new_xy[1] += t_y[i_frame]  # pingyi bianhuan
+        new_xy[1] += t_y[i_frame]  
         data_numpy[0:2, i_frame, :, :] = new_xy.reshape(2, V, M)
 
     return data_numpy
 
 
 def random_shift(data_numpy):
-    # input: C,T,V,M 偏移其中一段
+    """
+    randomly shifts data points along temporal dimension
+
+    :param data_numpy: numpy array to shift
+    :return: return shifted numpy array
+    """
+    # input: C,T,V,M 
     C, T, V, M = data_numpy.shape
     data_shift = np.zeros(data_numpy.shape)
     valid_frame = (data_numpy != 0).sum(axis=3).sum(axis=2).sum(axis=0) > 0
@@ -118,6 +162,9 @@ def random_shift(data_numpy):
 
 
 def openpose_match(data_numpy):
+    """
+    Unsure what the idea behind this function is
+    """
     C, T, V, M = data_numpy.shape
     assert (C == 3)
     score = data_numpy[2, :, :, :].sum(axis=1)

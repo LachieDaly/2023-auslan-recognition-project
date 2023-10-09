@@ -24,78 +24,93 @@ from sklearn.model_selection import train_test_split
 
 from sklearn.metrics import classification_report, confusion_matrix
 from keras.callbacks import EarlyStopping, History
-#  
 
-
-def write_results(hist, expPath,  useBatch=0):
+def write_results(hist, exp_path):
     """
     Writes the results of the given history object
     to a csv in the provided path
+
+    :param exp_path: path to save results
     """
     train_loss=hist.history['loss']
     val_loss=hist.history['val_loss']
     train_acc=hist.history['accuracy']
     val_acc=hist.history['val_accuracy']
-    dataFrameData = np.transpose([train_loss, train_acc, val_loss, val_acc])
-    writeCSVFile(dataFrameData , 'train_val_losses_acc.csv', expPath)
+    data_frame = np.transpose([train_loss, train_acc, val_loss, val_acc])
+    write_csv_file(data_frame , 'train_val_losses_acc.csv', exp_path)
 
 
-def saveModelTimes(timeInfo, expPath):
+def save_model_times(time_info, exp_path):
     """
     Print and save time info to provided path
+
+    :param time_info: time info data
+    :param exp_path: path to save model times
     """
     print('Total time:')
-    print(np.sum(timeInfo))
-    writeCSVFile(timeInfo , 'model_times.csv', expPath)
+    print(np.sum(time_info))
+    write_csv_file(time_info , 'model_times.csv', exp_path)
 
-def writeCSVFile(data, fileName, pathName):
+def write_csv_file(data, file_name, path_name):
     """
-    Write data to path / filename with data
-    """
-    pd.DataFrame(data).to_csv(os.path.join(pathName,fileName), sep=',')
+    save data to csv
 
-def visualise_hist(hist, experiment_name, useBatch=0):
+    :param data: csv data frame to be saved
+    :param file_name: file name for new csv
+    :param path_name: path to save file
     """
-    Plot the model history information
-    """
+    pd.DataFrame(data).to_csv(os.path.join(path_name, file_name), sep=',')
 
+def visualise_hist(hist, experiment_name, use_batch=0):
+    """
+    Plots the model training loss, val_loss, accuracy, and val accuracy history
+
+    :param hist: model history object
+    :param experiment_name: experiment name to save plot under
+    :param use_batch: if 1, show plot
+    """
     train_loss=hist.history['loss']
     val_loss=hist.history['val_loss']
     train_acc=hist.history['accuracy']
     val_acc=hist.history['val_accuracy']
     
-    xc=range(len(val_acc))
+    xc = range(len(val_acc))
 
     plt.figure(3)
-    plt.plot(xc,train_loss)
-    plt.plot(xc,val_loss)
+    plt.plot(xc, train_loss)
+    plt.plot(xc, val_loss)
     
     plt.xlabel('Epochs')
     plt.ylabel('Loss')
     plt.title('Model loss')
     plt.grid(True)
-    plt.legend(['Train','Validation'])
-    plt.savefig(experiment_name +'/loss.png')
-    if useBatch == 1:
+    plt.legend(['Train', 'Validation'])
+    plt.savefig(experiment_name + '/loss.png')
+    if use_batch == 1:
         plt.show()
 
     plt.figure(4)
-    plt.plot(xc,train_acc)
-    plt.plot(xc,val_acc)
+    plt.plot(xc, train_acc)
+    plt.plot(xc, val_acc)
     plt.xlabel('Epochs')
     plt.ylabel('Accuracy')
     plt.title('Model accuracy')
     plt.grid(True)
-    plt.legend(['Train','Validation'],loc=4)
+    plt.legend(['Train', 'Validation'], loc=4)
 
-    plt.savefig(experiment_name +'/acc.png')
-    if useBatch==1:
+    plt.savefig(experiment_name + '/acc.png')
+    if use_batch == 1:
         plt.show()
 
-def print_confusion_matrix(y_test, numb_classes, y_pred, main_exp_folder):
+def print_confusion_matrix(y_test, n_classes, y_pred, main_exp_folder):
     """
     Print the confusion matrix given a list of actual and predicted values
     Save confusion matrix to experiment folder
+
+    :param y_test: validation/test labels
+    :param n_classes: number of classes
+    :param y_pred: predicted labels
+    :param main_exp_folder: experiment folder to save confusion matrix
     """
     confusionMatrix = confusion_matrix(y_test, y_pred)
     print('Confusion Matrix: ', confusionMatrix.shape)
@@ -108,8 +123,8 @@ def print_confusion_matrix(y_test, numb_classes, y_pred, main_exp_folder):
     # Visualizing of confusion matrix
     plotCM = True
     if plotCM:
-        df_cm = pd.DataFrame(confusionMatrix, range(numb_classes), range(numb_classes))
-        plt.figure(figsize = (numb_classes,numb_classes))
+        df_cm = pd.DataFrame(confusionMatrix, range(n_classes), range(n_classes))
+        plt.figure(figsize = (n_classes, n_classes))
         sn.set(font_scale=1.4)#for label size
         sn.heatmap(df_cm, annot=True,annot_kws={"size": 12})# font size
         plt.savefig(os.path.join(main_exp_folder,'cm.png'))
@@ -120,9 +135,14 @@ def print_confusion_matrix(y_test, numb_classes, y_pred, main_exp_folder):
     pd.DataFrame(df).to_csv(os.path.join(main_exp_folder, 'ResultMetrics.csv'), sep=',')
 
 
-def pretrained_model(img_size, model_name, retrainModel=False, dataFormat='folder'):
+def pretrained_model(img_size, model_name, retrain=False):
     """
     return a compiled feature extraction model
+
+    :param img_size: width and height of input image
+    :param model_name: cnn model name to use
+    :param retrain: make layers of the feature extractor trainable
+    :return: pretrained feature extractor model
     """
     input_img = tf.keras.layers.Input(shape=(img_size, img_size, 3))
     print("Input image")
@@ -132,7 +152,7 @@ def pretrained_model(img_size, model_name, retrainModel=False, dataFormat='folde
         model_cnn = tf.keras.applications.MobileNet(weights="imagenet", include_top=False, input_tensor=input_img)
     elif model_name == 'InceptionV3':
         model_cnn = tf.keras.applications.InceptionV3(weights="imagenet", include_top=False, input_shape=(256, 256, 3))
-    if retrainModel:
+    if retrain:
         for layer in model_cnn.layers[:-4]:
             layer.trainable = True
 
@@ -149,13 +169,30 @@ def pretrained_model(img_size, model_name, retrainModel=False, dataFormat='folde
 
     return model
 
-def append_image_extention(imgPath):
-    return imgPath + '.jpg'
-
-def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model_dest, 
-         class_limit, img_size, dataFormat='folder', load_model = False, savedModel=None):
+def append_image_extention(img_path):
     """
-    
+    appends jpg extension to image path
+
+    :param img_path: path to image
+    """
+    return img_path + '.jpg'
+
+def main(model_name, retrain, train_path, test_path, main_exp_folder, model_dest, 
+         class_limit, img_size, data_format='folder', load_model=False, saved_model=None):
+    """
+    trains accumulative motion network
+
+    :param model_name: starting convolutional model
+    :param retrain: if true, train the last four layers of the chosen cnn
+    :param train_path: path to training data
+    :param test_path: path to testing data
+    :param main_exp_folder: path to save experiment results
+    :param model_dest: destination to save trained model
+    :param class_limit: number of classes
+    :param img_size: input image size in pixels
+    :param data_format: collect data based on folder structure or csv file
+    :param load_model: if true, load pretrained model
+    :param saved_model: saved model to load
     """
     if os.path.exists(main_exp_folder)  == False :
         os.mkdir(main_exp_folder, 0o755)
@@ -165,16 +202,14 @@ def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model
     print('------------------------------------------------------------------------')
     datagen_train = ImageDataGenerator(validation_split=0.20, rotation_range=10, zoom_range=0.2)
 
-    if dataFormat == 'csv':
-        """
-        Generate testing data from csv
-        """
-        train_df = pd.read_csv(train_path,names=['index','label','path','framesN','signerID'],header=None, dtype=str)
+    if data_format == 'csv':
+        # Generate testing data from csv
+        train_df = pd.read_csv(train_path, names=['index','label','path','framesN','signerID'], header=None, dtype=str)
         train_df = shuffle(train_df)
         train_df["path"] = train_df["path"].apply(append_image_extention)
 
         if test_path != None:
-            test_df = pd.read_csv(test_path, names=['index','label','path','framesN','signerID'],header=None, dtype=str)
+            test_df = pd.read_csv(test_path, names=['index','label','path','framesN','signerID'], header=None, dtype=str)
             test_df["path"] = test_df.path.apply(append_image_extention)
             print(test_df)
             train_ds = datagen_train.flow_from_dataframe(dataframe=train_df, directory=None, x_col="path", y_col="label", 
@@ -188,7 +223,7 @@ def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model
         else:
             y_ = train_df['label'].to_numpy()
             data_pdf = train_df[['path', 'label']]
-            X_train_df, test_df = train_test_split(data_pdf ,  test_size=0.20, stratify=y_ )
+            X_train_df, test_df = train_test_split(data_pdf, test_size=0.20, stratify=y_)
 
             print(data_pdf)
             print(X_train_df)
@@ -225,15 +260,15 @@ def main(model_name, retrainModel, train_path, test_path, main_exp_folder, model
 
     # model 
     if model_name =='mobileNet' and load_model == False:
-        model = pretrained_model(img_size, model_name, retrainModel, dataFormat)
+        model = pretrained_model(img_size, model_name, retrain, data_format)
 
     early_stopper = EarlyStopping(monitor='val_loss', patience=10)
     time_callback = History()
     best_checkpoint = keras.callbacks.ModelCheckpoint(filepath = main_exp_folder + "/model-best.h5",  
-                                                      verbose = 1, save_best_only = True)
+                                                      verbose=1, save_best_only=True)
 
     if load_model:
-        model = keras.models.load_model(savedModel)
+        model = keras.models.load_model(saved_model)
         print(model.summary())
         es = 0
     else:    

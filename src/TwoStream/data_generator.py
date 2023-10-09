@@ -27,13 +27,24 @@ class FramesGenerator(tf.keras.utils.Sequence):
     Generator can be used for multi-threading
     Substantial initialisation and checks upfront, including one-hot-encoding of labels
     """
-    def __init__(self, path:str, batch_size:int, frames:int, height: int, width:int, channels:int, \
-        classes:list = None, shuffle:bool = True, resize:bool = False, convert_to_grapy:bool = False):
+    def __init__(self, path:str, batch_size:int, frames:int, height:int, width:int, channels:int,
+                 classes:list=None, shuffle:bool=True, resize:bool=False):
         """
+        Initialises frame generator
         Assum directory structures: --this isn't our structure currently, but it could be
         ... / path / class / videoname / frames.jpg
+
+        :param path: root path to frames
+        :param batch_size: training batch size
+        :param frames: number of frames collected
+        :param height: image height in pixels
+        :param width: image width in pixels
+        :param channels: number of channels in image
+        :param classes: list of class names
+        :param shuffle: if true, shuffle data before each epoch
+        :param resize: if true, resize image
+        :return: Frames Generator
         """
-        'Initialise'
         self._batch_size = batch_size
         self._frames = frames
         self._height = height
@@ -42,7 +53,6 @@ class FramesGenerator(tf.keras.utils.Sequence):
         self._shape = (frames, height, width, channels)
         self._shuffle = shuffle
         self._resize = resize
-        self._convert_to_graph = convert_to_grapy
 
         # retrieve all videos 
         self._videos = pd.DataFrame(sorted(glob.glob(path + "/*/*")), columns=["frame_dir"])
@@ -112,13 +122,12 @@ class FramesGenerator(tf.keras.utils.Sequence):
 
         frames = frames[..., 0:self._channels]
 
-        frames = process_images(frames, self._frames, self._height, self._width, rescale = True)
+        frames = process_images(frames, self._frames, self._height, self._width, rescale=True)
 
         return frames, video.label
 
     def data_generation(self, video:pd.Series):
         return self.__data_generation(video)
-
 
     def on_epoch_end(self):
         """
@@ -135,15 +144,24 @@ class FramesGenerator_withSplitting(tf.keras.utils.Sequence):
     Substantial initialization and checks upfront, including one-hot-encoding of labels.
     """
 
-    def __init__(self, path:str, \
-        batch_size:int, frames:int, height:int, width:int, channels:int, \
-        classes_full:list = None, shuffle:bool = True, resize:bool = False, convert_to_graph:bool = False):
+    def __init__(self, path:str, batch_size:int, frames:int, height:int, width:int, channels:int, 
+                 classes_full:list=None, shuffle:bool=True, resize:bool=False, convert_to_grapy=False):
         """
+        Initialise Frames Generator with Splitting
         Assume directory structure:
         ... / sPath / class / videoname / frames.jpg
-        """
 
-        'Initialization'
+        :param path: root path to frames
+        :param batch_size: training batch size
+        :param frames: number of frames collected
+        :param height: image height in pixels
+        :param width: image width in pixels
+        :param channels: number of channels in image
+        :param classes: list of class names
+        :param shuffle: if true, shuffle data before each epoch
+        :param resize: if true, resize image
+        :return: Frames Generator with splitting
+        """
         self._batch_size = batch_size
         self._frames = frames
         self._height = height
@@ -152,8 +170,8 @@ class FramesGenerator_withSplitting(tf.keras.utils.Sequence):
         self._shape = (frames, height, width, channels)
         self._shuffle = shuffle
         self._resize = resize
-        self._convert_to_graph = convert_to_graph
-        		
+        self._convert_to_grapy = convert_to_grapy
+
         # retrieve all videos = frame directories
         self._videos = pd.DataFrame(sorted(glob.glob(path + "/*/*")), columns=["frame_dir"])
         self._sample_count = len(self._videos)
@@ -198,7 +216,6 @@ class FramesGenerator_withSplitting(tf.keras.utils.Sequence):
         if self._shuffle == True:
             np.random.shuffle(self._indexes)
 
-
     def __getitem__(self, step_count):
         """
         Generate one batch of data
@@ -234,7 +251,7 @@ class FramesGenerator_withSplitting(tf.keras.utils.Sequence):
         # only use the first nChannels (typically 3, but maybe 2 for optical flow)
         frames = frames[..., 0:self._channels]
 		
-        frames = images_normalize_withGrayscale(frames, self._frame_count, self._height, self._width, rescale = True)
+        frames = images_normalize_withGrayscale(frames, self._frame_count, self._height, self._width, rescale=True)
         
         return frames, video.label
 
@@ -248,14 +265,24 @@ class FeaturesGenerator_multi_withSplitting(tf.keras.utils.Sequence):
     Substantial initialization and checks upfront, including one-hot-encoding of labels.
     """
 
-    def __init__(self, path_one:str, path_two:str, batch_size:int, shape_one, shape_two, \
-        classes_full:list = None, shuffle:bool = True):
+    def __init__(self, path_one:str, path_two:str, batch_size:int, shape_one, shape_two,
+                 classes_full:list=None, shuffle:bool=True):
         """
+        Initialise Multi Feature Generator with Splitting
+
         Assume directory structure:
         ... / sPath_01 / class / videoname / frames.jpg
+
+        :param path_one: path to first set of features
+        :param path_two: path to second set of features
+        :param batch_size: batch size hyperparameter
+        :param shape_one: shape of first feature set
+        :param shape_two: shape of second feature set
+        :param classes_full: list of class names
+        :param shuffle: if true, perform shuffle at the end of epochs
+        :return: Multi Feature Generator with Splitting
         """
 
-        'Initialization'
         self._batch_size = batch_size
         self._shape_one = shape_one
         self._shape_two = shape_two
@@ -269,6 +296,14 @@ class FeaturesGenerator_multi_withSplitting(tf.keras.utils.Sequence):
         return
 
     def initialize_gen(self, path, classes_full, shape):
+        """
+        initialise generator
+
+        :param path: path to samples data frame to load
+        :param classes_full: list of class names
+        :param shape: return feature shape
+        :return: sample dataframe, class counts, class list, sample count
+        """
         samples_df = path
         sample_count = len(samples_df)
         if sample_count == 0: raise ValueError("Found no feature files in " + path)
@@ -284,9 +319,7 @@ class FeaturesGenerator_multi_withSplitting(tf.keras.utils.Sequence):
            
         # extract unique classes from all detected labels
         classes = sorted(list(samples_df.sLabel.unique()))
-        #hamzah
         classes = [int(i) for i in classes]
-        #print(self.liClasses)		
 
         # if classes are provided upfront
         if classes_full != None:
@@ -304,7 +337,7 @@ class FeaturesGenerator_multi_withSplitting(tf.keras.utils.Sequence):
         label_encoder.fit(classes)
         samples_df.loc[:, "label"] = label_encoder.transform(samples_df.label)
 
-        return samples_df,  classes_count, classes, sample_count
+        return samples_df, classes_count, classes, sample_count
         
     def __len__(self):
         """
@@ -372,14 +405,22 @@ class FeaturesGeneratorMultiInput(tf.keras.utils.Sequence):
     return samples from two sources and check if they match
     """
 
-    def __init__(self, path_one:str, path_two:str, batch_size:int, shape_one, shape_two, \
-        classes_full:list = None, shuffle:bool = True):
+    def __init__(self, path_one:str, path_two:str, batch_size:int, shape_one, shape_two,
+                 classes_full:list=None, shuffle:bool=True):
         """
+        Initialise Multi Input Features Generater
         Assume directory structure:
         ... / sPath_01 / class / videoname / frames.jpg
-        """
 
-        'Initialization'
+        :param path_one: path to first set of features
+        :param path_two: path to second set of features
+        :param batch_size: batch size hyperparameter
+        :param shape_one: shape of first feature set
+        :param shape_two: shape of second feature set
+        :param classes_full: list of class names
+        :param shuffle: if true, perform shuffle at the end of epochs
+        :return: Multi Input Feature Generator with Splitting
+        """
         self._batch_size = batch_size
         self._shape_one = shape_one
         self._shape_two = shape_two
@@ -393,7 +434,14 @@ class FeaturesGeneratorMultiInput(tf.keras.utils.Sequence):
         return
 
     def initialize_gen(self, path, classes_full, shape):
-                #print(sPath )
+        """
+        initialise generator
+
+        :param path: path to samples data frame to load
+        :param classes_full: list of class names
+        :param shape: return feature shape
+        :return: sample dataframe, class counts, class list, sample count
+        """
         samples_df = path
         sample_count = len(samples_df)
         if sample_count == 0: 
@@ -529,14 +577,19 @@ class FeaturesGenerator(tf.keras.utils.Sequence):
     Substantial initialization and checks upfront, including one-hot-encoding of labels.
     """
 
-    def __init__(self, path:str, batch_size:int, shape, \
-        classes_full:list = None, shuffle:bool = True):
+    def __init__(self, path:str, batch_size:int, shape, classes_full:list=None, shuffle:bool=True):
         """
+        Initialise Feature Generator
+
         Assume directory structure:
         ... / sPath / class / feature.npy
-        """
 
-        'Initialization'
+        :param path: path to features
+        :param batch_size: batch size hyperparameters
+        :param shape: shape of the feature
+        :param classes_full: list of classes
+        :param shuffle: if true, shuffle data between epochs
+        """
         self._batch_size = batch_size
         self._shape = shape
         self._shuffle = shuffle
@@ -639,14 +692,23 @@ class FeaturesGenerator_withSplitting(tf.keras.utils.Sequence):
     Substantial initialization and checks upfront, including one-hot-encoding of labels.
     """
 
-    def __init__(self, path:str, batch_size:int, shape, \
-        classes_full:list = None, shuffle:bool = True, video_set=None, feature = None):
+    def __init__(self, path:str, batch_size:int, shape, classes_full:list=None, 
+                 shuffle:bool=True, video_set=None, feature=None):
         """
+        Initialises Feature Generator with Splitting
+
         Assume directory structure:
         ... / path / class / feature.npy
-        """
 
-        'Initialization'
+        :param path: path to features
+        :param batch_size: batch size hyperparameters
+        :param shape: shape of the feature
+        :param classes_full: list of classes
+        :param shuffle: if true, shuffle data between epochs
+        :param video_set: video set?
+        :param feature: includes feature shapes
+        :return: Feature Generator with Splitting
+        """
         self._batch_size = batch_size
         self._shape = shape
         self._feature = feature
@@ -675,7 +737,6 @@ class FeaturesGenerator_withSplitting(tf.keras.utils.Sequence):
         # extract unique classes from all detected labels
         self._classes = sorted(list(self._samples_df.label.unique()))
         self._classes = [int(i) for i in self._classes]
-        #print(self.liClasses)		
 
         # if classes are provided upfront
         if classes_full != None:
@@ -728,18 +789,13 @@ class FeaturesGenerator_withSplitting(tf.keras.utils.Sequence):
         for i in range(batch_size):
             # generate single sample data
             x[i,], y[i] = self.__data_generation(sample_batch.iloc[i,:])
-        #print(arX.shape)
         # onehot the labels
         return x, tf.keras.utils.to_categorical(y, num_classes=self._class_count)
 
     def __data_generation(self, sample:pd.Series):
         'Generates data for 1 sample' 
-        
-        'Generates data for 1 sample' 
         try:
-            #print(seSample.sPath)
             x = np.load(sample.path).squeeze()
-            #print(arX.shape)
             if self._video_set != None and self._video_set["reshape_input"] == True: 
                 x = x.reshape(self._new_input_shape) 
 
@@ -754,6 +810,10 @@ class VideoClasses():
     Loads the video classes (incl descriptions) from a csv file
     """
     def __init__(self, class_file:str):
+        """
+        Intialise Video Classes 
+        :param class_file: csv class file
+        """
         # load label description: index, sClass, sLong, sCat, sDetail
         self._class_df = pd.read_csv(class_file)
 
