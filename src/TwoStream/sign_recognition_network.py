@@ -25,6 +25,13 @@ from data_generator import VideoClasses, FeaturesGeneratorMultiInput
 from lstm_model import lstm_build_multi_single
 
 def read_data(data_path, convert_to_int=False, ext=".npy"):
+    """
+    read csvg data and return sample paths and labels
+
+    :param data_path: path to csv file with relevant information
+    :param convert_to_int: if true, convert all laabels to integers
+    :param ext: extension to add to sample path for example .npy
+    """
     data_all = pd.read_csv(data_path, names=["index", "cat", "path", "frame_num", "signer_id"], header=None)
 
     if convert_to_int:
@@ -38,10 +45,24 @@ def read_data(data_path, convert_to_int=False, ext=".npy"):
     
     return samples_df, labels
 
-def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:keras.Model, classes:VideoClasses,
-                            batch_size:int=16, epochs:int=100, learning_rate:float=1e-4, exp_full_path=None,
-                            val_available=True, csv_file=False, train_path_one=None, val_path_one=None,
-                            train_path_two=None, val_path_two=None, load_model=False, save_model=None):
+def train_feature_generator(model_dir:str, log_path:str, model:keras.Model, classes:VideoClasses, batch_size:int=16, 
+                            epochs:int=100, learning_rate:float=1e-4, csv_file=False, train_path_one=None, 
+                            train_path_two=None, load_model=False):
+    """
+    train model
+
+    :param model_dir: directory to save model
+    :param log_path: directory to log model performance
+    :param model: model to be trained
+    :param classes: video classes object
+    :param batch_size: batch size hyperparameter for training
+    :param epochs: number of epochs to train for
+    :param learning_rate: learning rate for training
+    :param csv_file: if true, load data using csv file
+    :param train_path_one: training path
+    :param train_path_two: validation path
+    :param load_model: if true, load saved model
+    """
     if csv_file:
         samples_df, labels = read_data(train_path_one)
 
@@ -67,7 +88,6 @@ def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:
     
     optimizer = Adam(learning_rate=learning_rate)
     model.compile(loss="categorical_crossentropy", optimizer=optimizer, metrics=["accuracy"])
-    # time_callback = TimeHistory() can I replace this with something
 
     print("Fit with generator, learning rate %f ..." % learning_rate)
     n_points = val_labels_one.shape[0]
@@ -93,15 +113,33 @@ def train_feature_generator(feature_dir:str, model_dir:str, log_path:str, model:
 
         es = early_stopper.stopped_epoch
     
-def save_model_times(time_info, exp_path):
+def print_model_times(time_info):
+    """
+    prints historical model times
+
+    :param time_info: time info object
+    """
     # print and save model times
     print("Total time:")
     print(np.sum(time_info))
 
 def write_CSV_file(data, filename, path_name):
+    """
+    write data to csv file
+
+    :param data: data to be saved to csv
+    :param filename: filename to save csv under
+    :param path_name: directory path to save file
+    """
     pd.DataFrame(data).to_csv(os.path.join(path_name, filename), sep=",")
 
-def write_results(hist, exp_path, use_batch=0):
+def write_results(hist, exp_path):
+    """
+    write model history to file
+
+    :param hist: model history object
+    :param exp_path: directory to save results
+    """
     train_loss = hist.history["loss"]
     val_loss = hist.history["val_loss"]
     train_acc = hist.history["accuracy"]
@@ -112,6 +150,17 @@ def write_results(hist, exp_path, use_batch=0):
     write_CSV_file(data_frame_data, "train_val_losses_acc.csv", exp_path)
 
 def test(rm, es, main_exp_folder, load_to_memory, class_limit, test_generator=None, X_test=None, y_test=None):
+    """
+    test model
+
+    :param rm: loaded model
+    :param es: used to pass early stopping epoch for writing?
+    :param main_exp_folder: folder to save reuslts
+    :param load_to_memory: if true, use supplied data and labels, instead of test_generator
+    :param test_generator: generator for test data
+    :param X_test: testing data
+    :param y_test: testing labels
+    """
     if load_to_memory:
         loss, acc = rm.evaluate(X_test, y_test, verbose=0)
     else:
@@ -137,9 +186,17 @@ def test(rm, es, main_exp_folder, load_to_memory, class_limit, test_generator=No
         
         y_pred = Y_pred.argmax(axis=1)
 
-        print_confusion_matrix(X_test, y_test, class_limit, y_pred, main_exp_folder)
+        print_confusion_matrix(y_test, class_limit, y_pred, main_exp_folder)
 
-def print_confusion_matrix(X_test, y_test, numb_classes, y_pred, main_exp_folder):
+def print_confusion_matrix(y_test, n_classes, y_pred, main_exp_folder):
+    """
+    prints and saves a confusion matrix
+
+    :param y_test: actual class labels
+    :param n_classes: number of classes
+    :param y_pred: predicted class labels
+    :param main_exp_folder: main directory to save testing results
+    """
     cm = confusion_matrix(y_test.argmax(axis=1), y_pred)
     print("Confusion Matrix: ", confusion_matrix.shape)
     filename = os.path.join(main_exp_folder, "CM.csv")
@@ -151,8 +208,8 @@ def print_confusion_matrix(X_test, y_test, numb_classes, y_pred, main_exp_folder
     # Visualising of confusion matrix
     plot_cm = False
     if plot_cm:
-        df_cm = pd.DataFrame(cm, range(numb_classes), range(numb_classes))
-        plt.figure(figsize=(numb_classes, numb_classes))
+        df_cm = pd.DataFrame(cm, range(n_classes), range(n_classes))
+        plt.figure(figsize=(n_classes, n_classes))
         sn.set(font_scale=1.4)
         sn.heatmap(df_cm, annot=True, annot_kws={"size": 12})
         plt.savefig(os.path.join(main_exp_folder, "cm.png"))
@@ -163,6 +220,13 @@ def print_confusion_matrix(X_test, y_test, numb_classes, y_pred, main_exp_folder
     pd.DataFrame(df).to_csv(os.path.join(main_exp_folder, "ResultsMetrics.csv"), sep=",")
 
 def visualise_hist(hist, exper_name, use_batch):
+    """
+    print and save training history
+
+    :param hist: model history object
+    :param exper_name: name to save experiment under
+    :param use_batch: if true, show plots
+    """
     train_loss = hist.history["loss"]
     val_loss = hist.history["val_loss"]
     train_acc = hist.history["accuracy"]
@@ -196,9 +260,25 @@ def visualise_hist(hist, exper_name, use_batch):
     if use_batch == 1:
         plt.show()
 
-def train_mobile_lstm(video_set, feature_one, feature_two, exp_full_path=None, exp_path=None, val_available=None, \
-                      csv_file=None, train_path_one=None, val_path_one=None, train_path_two=None, val_path_two=None, \
+def train_mobile_lstm(video_set, feature_one, feature_two, exp_full_path=None, val_available=None, 
+                      csv_file=None, train_path_one=None, val_path_one=None, train_path_two=None, val_path_two=None,
                         class_file=None, image_feature_dir=None, load_model=False, saved_model=None):
+    
+    """
+    trains mobile lstm
+
+    :param model_dir: directory to save model
+    :param log_path: directory to log model performance
+    :param model: model to be trained
+    :param classes: video classes object
+    :param batch_size: batch size hyperparameter for training
+    :param epochs: number of epochs to train for
+    :param learning_rate: learning rate for training
+    :param csv_file: if true, load data using csv file
+    :param train_path_one: training path
+    :param train_path_two: validation path
+    :param load_model: if true, load saved model
+    """
     
     if os.path.exists(exp_full_path) == False:
         os.mkdir(exp_full_path, 0o755)

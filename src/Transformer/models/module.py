@@ -18,6 +18,7 @@ from .lstm_fb import LSTMFB
 from .lstm_hc import LSTMHC
 from .lstm_hcpf import LSTMHCPF
 from .lstm_rastgoo import LSTMR
+from .lstm_hcp import LSTMHCP
 
 def get_model_def():
     return Module
@@ -114,6 +115,15 @@ class Module(pl.LightningModule):
                     self.hparams.freeze_layers,
                     self.hparams.dropout,
                     device=self.device)
+
+        elif model == 'lstmhcp':
+            self.model = LSTMHCP(NUM_CLASSES,
+                            self.hparams.embed_size,
+                                self.hparams.sequence_length,
+                                self.hparams.cnn,
+                                self.hparams.freeze_layers,
+                                self.hparams.dropout,
+                                device=self.device)
             
         self.criterion = torch.nn.CrossEntropyLoss()
 

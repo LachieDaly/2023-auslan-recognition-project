@@ -38,8 +38,8 @@ if __name__ == '__main__':
 
     # Path setting
     exp_name = 'rgb_repeat_last_frame'
-    data_path = "./Data/ELAR/sam_frames_crop/train"
-    data_path2 = "./Data/ELAR/sam_frames_crop/train"
+    data_train_path = "./Data/ELAR/sam_frames_crop/train"
+    data_val_path = "./Data/ELAR/sam_frames_crop/train"
     label_train_path = "./Data/ELAR/avi/train_val_labels.csv"
     label_val_path = "./Data/ELAR/avi/train_val_labels.csv"
     model_path = "./src/SAMSLR/checkpoints/{}".format(exp_name)
@@ -82,11 +82,11 @@ if __name__ == '__main__':
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.5], std=[0.5])])
     
-    train_set = Sign_Isolated(data_path=data_path, label_path=label_train_path, 
+    train_set = Sign_Isolated(data_path=data_train_path, label_path=label_train_path, 
                               frames=sample_duration, num_classes=num_classes, 
                               train=True, transform=transform)
     
-    val_set = Sign_Isolated(data_path=data_path2, label_path=label_val_path, 
+    val_set = Sign_Isolated(data_path=data_val_path, label_path=label_val_path, 
                             frames=sample_duration, num_classes=num_classes, 
                             train=False, transform=transform)
     

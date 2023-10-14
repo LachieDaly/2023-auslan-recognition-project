@@ -26,7 +26,13 @@ for dataset in datasets:
     for set in sets:
         print(dataset, set)
         data = np.load('./Data/ELAR/{}/{}_data_joint.npy'.format(dataset, set))
+        # N frame number?
+        # C channel?
+        # T
+        # V
+        # M
         N, C, T, V, M = data.shape
+        """Changing this will change it in our memory file as well"""
         fp_sp = open_memmap(
             './Data/ELAR/{}/{}_data_bone.npy'.format(dataset, set),
             dtype='float32',
@@ -34,6 +40,7 @@ for dataset in datasets:
             shape=(N, 3, T, V, M))
 
         fp_sp[:, :C, :, :, :] = data
+        # Start to build the bone vectors
         for v1, v2 in tqdm(paris[dataset]):
             v1 -= 5
             v2 -= 5

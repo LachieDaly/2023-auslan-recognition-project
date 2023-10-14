@@ -267,7 +267,7 @@ def features_3D_predict_generator(frames_base_dir:str, feature_base_dir:str,
     (Later these features are used to train a small model containing 
     only the adjusted I3D top layers.)
 
-    :param frame_base_dir: base directory for frames folders
+    :param frames_base_dir: base directory for frames folders
     :param feature_base_dir: where to wsave generated features
     :param model: feature extracting model
     :param batch_size: batch size hyperparameter

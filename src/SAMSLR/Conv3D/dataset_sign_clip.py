@@ -94,7 +94,7 @@ class Sign_Isolated(Dataset):
             angle = (random.random() - 0.5) * 10
             crop_box = self.random_crop_paras(256, 224)
         else:
-            index_list = self.frame_indices_tranform_test(len(os.listdir(folder_path)), self.frames, clip_no)
+            index_list = self.frame_indices_transform_test(len(os.listdir(folder_path)), self.frames, clip_no)
         
         # for i in range(self.frames):
         for i in index_list:

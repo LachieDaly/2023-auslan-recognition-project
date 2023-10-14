@@ -3,7 +3,20 @@ from sklearn.metrics import accuracy_score
 import pickle
 import numpy as np
 
-def val_epoch(model, criterion, dataloader, device, epoch, logger, writer, phase='Train', exp_name = None):
+def val_epoch(model, criterion, dataloader, device, epoch, logger, writer, phase='Train', exp_name=None):
+    """
+    code for validation epoch
+
+    :param model: model on which to perform val epoch on
+    :param criterion: loss function
+    :param dataloader: the dataloader used
+    :param device: device to perform on cpu/gpu
+    :param epoch: current epoch
+    :param logger: for logging messages to console
+    :param writer: for writing messages to file
+    :param phase: whether running epoch withing training loop, or alone
+    :param exp_name: experiment name for tracking results
+    """
     model.eval()
     losses = []
     all_label = []
@@ -16,7 +29,7 @@ def val_epoch(model, criterion, dataloader, device, epoch, logger, writer, phase
             # forward
             outputs_clips = []
             for i_clip in range(inputs_clips.size(1)):
-                inputs = inputs_clips[:,i_clip,:,:]
+                inputs = inputs_clips[:, i_clip, :, :]
                 outputs_clips.append(model(inputs))
                 # if isinstance(outputs, list):
                 #     outputs = outputs[0]
@@ -40,7 +53,7 @@ def val_epoch(model, criterion, dataloader, device, epoch, logger, writer, phase
         validation_acc = accuracy_score(all_label.squeeze().cpu().data.squeeze().numpy(), all_pred.cpu().data.squeeze().numpy())
 
     if phase == 'Test':
-        with open('./results/{}/results_epoch{:03d}_{}.pkl'.format(exp_name, epoch+1, validation_acc), 'wb') as f:
+        with open('./src/SAMSLR/results/{}/results_epoch{:03d}_{}.pkl'.format(exp_name, epoch+1, validation_acc), 'wb') as f:
             score_dict = dict(zip(dataloader.dataset.sample_names, score))
             pickle.dump(score_dict, f)
     # Log

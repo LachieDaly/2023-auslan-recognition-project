@@ -37,6 +37,13 @@ class r2plus1d_18(nn.Module):
     
     """
     def __init__(self, pretrained=True, num_classes=500, dropout_p=0.5):
+        """
+        initialises R(2+1)D model for RGB frames
+
+        :param pretrained: if true, use pretrained KINETICS400 weights
+        :param num_classes: number of classes to classify
+        :param dropout: dropout probability
+        """
         super(r2plus1d_18, self).__init__()
         self.pretrained = pretrained
         self.num_classes = num_classes
@@ -49,6 +56,8 @@ class r2plus1d_18(nn.Module):
         convert_relu_to_swish(self.r2plus1d_18)
         self.fc1 = nn.Linear(model.fc.in_features, self.num_classes)
         self.dropout = nn.Dropout(dropout_p, inplace=True)
+
+
     def forward(self, x):
         out = self.r2plus1d_18(x)
         # Flatten the layer to fc
@@ -59,6 +68,13 @@ class r2plus1d_18(nn.Module):
 
 class flow_r2plus1d_18(nn.Module):
     def __init__(self, pretrained=False, num_classes=500, dropout_p=0.5):
+        """
+        Initialises R(2+1)D model for optical flow
+
+        :param pretrained: if true, use pretrained KINETICS400 weights
+        :param num_classes: number of classes to classify
+        :param dropout: dropout probability
+        """
         super(flow_r2plus1d_18, self).__init__()
         self.pretrained = pretrained
         self.num_classes = num_classes
@@ -74,10 +90,10 @@ class flow_r2plus1d_18(nn.Module):
         convert_relu_to_swish(self.r2plus1d_18)
         self.fc1 = nn.Linear(model.fc.in_features, self.num_classes)
         self.dropout = nn.Dropout(dropout_p, inplace=True)
+
     def forward(self, x):
         out = self.r2plus1d_18(x)
         out = out.flatten(1)
         out = self.dropout(out)
         out = self.fc1(out)
-
         return out

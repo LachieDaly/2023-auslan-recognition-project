@@ -16,15 +16,21 @@ from frame import video_dir_to_frames_dir
 from feature import load_feature_extractor, predict_features
 
 def start_pipeline(video_set, video_dir, feature, image_dir, image_feature_dir):
+    """
+    build and start feature extraction pipeline
+
+    :param video_set: video set characteristics dictionary
+    :param video_dir: directory video directory
+    :param feature: feature dictionary containing model name, and input and output shape
+    :param image_dir: directory to store images
+    :param image_feature_dir: directory to store frame features
+    """
     # Extract frames from videos
     video_dir_to_frames_dir(video_dir, image_dir, frames_norm=video_set["frames_norm"], 
                             resize_min_dim=video_set["min_dim"], crop_shape=feature["input_shape"][0:2])
 
     # Load pretrained MobileNet model without top layer
     model = load_feature_extractor(feature)
-
-    # Calculate MobileNet features from rgb frames
-    # predict_features(image_dir + "/test", image_feature_dir + "/test", model, video_set["frames_norm"])
 
     predict_features(image_dir + "/train", image_feature_dir + "/train", model, video_set["frames_norm"])
 

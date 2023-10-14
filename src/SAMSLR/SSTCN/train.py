@@ -86,6 +86,8 @@ if __name__ == "__main__":
         model.train()
         print("")
         return newacc
+    
+    
     global_acc = 0
     needsave = False
     for epoch in range(opt.num_epochs):
@@ -149,7 +151,7 @@ if __name__ == "__main__":
                 torch.cuda.empty_cache()
 
         # Evaluate the model on the test set
-        newacc = test_model(epoch,global_acc,needsave)
+        newacc = test_model(epoch, global_acc, needsave)
         
         # Save model checkpoint
         if global_acc < newacc:#epoch % opt.checkpoint_interval == 0:

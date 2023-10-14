@@ -1,10 +1,9 @@
 import os
 import cv2
 import glob
-from pathlib import Path
 import numpy as np
 
-def accumulative_video_motion():
+def star_rbg_generation():
     # perform forward, backward, and concatenated fusion of the frames for ISA64 dataset where structure is [signer-->sign-->samples]
     home_source_folder = os.path.normpath('../dataset/elar/images/')
     signs = glob.glob(home_source_folder + '/*/*/*')
@@ -63,4 +62,4 @@ def combine_matrices(blue, green, red):
     return image
 
 
-accumulative_video_motion()
+star_rbg_generation()

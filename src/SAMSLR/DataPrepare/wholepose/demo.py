@@ -33,6 +33,7 @@ index_mirror = np.concatenate([
                 np.arange(113,134), 
                 np.arange(92,113)
                 ]) - 1
+
 assert(index_mirror.shape[0] == 133)
 
 multi_scales = [512,640]

@@ -2,6 +2,19 @@ import torch
 from sklearn.metrics import accuracy_score
 
 def train_epoch(model, criterion, optimizer, dataloader, device, epoch, logger, log_interval, writer):
+    """
+    Perform all tasks required for an epoch
+
+    :param model: model state currently being trained
+    :param criterion: loss function
+    :param optimizer: The selected optimizer i.e. Adam. With learning rate, weight decay
+    :param dataloader: the data loader to be chosen
+    :param device: device to train tensor cpu/gpu
+    :param epoch: epoch count
+    :param logger: logger being used
+    :param log_interval: how often to log results
+    :param writer: for writing expreriment results to file
+    """
     model.train()
     losses = []
     all_label = []

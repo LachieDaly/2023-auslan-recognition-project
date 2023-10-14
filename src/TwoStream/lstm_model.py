@@ -24,8 +24,16 @@ from keras import layers
 
 # from transformer_model import TransformerEncoder, PositionalEmbedding
 
-def lstm_build(frames_norm:int, feature_length:int, num_classes:int, dropout:float = 0.5, model_name:str = 'None') : #-> tensorflow.keras.Model
+def lstm_build(frames_norm:int, feature_length:int, num_classes:int, dropout:float=0.5, model_name:str='None'):
+    """
+    Initialise and configure lstm model
 
+    :param frames_norn: expected frame count,
+    :param feature_length: number of features in each frame
+    :param num_classes: number of class labels
+    :param dropout: dropout values across sequence models
+    :param model_name: lstm or gru
+    """
     # Build new LSTM model
     print("Build and compile LSTM model ...")
     
@@ -58,8 +66,16 @@ def lstm_build(frames_norm:int, feature_length:int, num_classes:int, dropout:flo
     return model
 
 def lstm_build_multi(frames_norm:int, feature_length_01:int, feature_length_02:int, num_classes:int, 
-                     dropout:float = 0.5, model_name:str = 'None'): #-> keras.Model:
+                     dropout:float = 0.5, model_name:str = 'None'):
+    """
+    Initialise and configure lstm model which takes multiple features
 
+    :param frames_norn: expected frame count,
+    :param feature_length: number of features in each frame
+    :param num_classes: number of class labels
+    :param dropout: dropout values across sequence models
+    :param model_name: lstm or gru
+    """
     # Build new LSTM model
     print("Build and compile the model ...")
     
@@ -81,8 +97,15 @@ def lstm_build_multi(frames_norm:int, feature_length_01:int, feature_length_02:i
 
     return model
 
-def lstm_build_multi_single(frames_norm:int, feature_length_01:int, feature_length_02:int, 
-                            num_classes:int, dropout:float = 0.5, model_name:str = 'None'):
+def lstm_build_multi_single(frames_norm:int, feature_length_01:int, num_classes:int):
+    """
+    Initialise and configure lstm model which takes multiple features
+
+    :param frames_norn: expected frame count,
+    :param feature_length_01: number of features in each frame
+    :param num_classes: number of class labels
+    :return: multi lstm for lstm and mobile net features
+    """
 
     # Build a fused LSTM and CNN (LSTM for frames and CNN for a single image per video)
 
@@ -127,7 +150,13 @@ def lstm_build_multi_single(frames_norm:int, feature_length_01:int, feature_leng
 
     return model
 
-def pretrainedModel(img_size, model_name, num_classes, retrain_model=False):
+def pretrained_model(img_size, model_name, retrain_model=False):
+    """
+    Get pretrained feature extracting model
+
+    :param img_size: size of imagebefore feature extraction
+    :param model_name: the name of the pretrained model to use "mobileNet"/"InceptionV3"
+    """
     input_img = tf.keras.layers.Input(shape=(img_size, img_size, 3))
     #normalization_layer = tf.keras.layers.Rescaling(1./255)
     if model_name == 'mobileNet':
@@ -135,6 +164,7 @@ def pretrainedModel(img_size, model_name, num_classes, retrain_model=False):
         model_cnn = tf.keras.applications.MobileNet(weights="imagenet",include_top=False, input_tensor=input_img)
     elif model_name == 'InceptionV3':
         model_cnn = tf.keras.applications.InceptionV3(weights="imagenet",include_top=False, input_shape=(256, 256, 3))
+
     if retrain_model:
         for layer in model_cnn.layers[:-4]:
             layer.trainable = True
@@ -143,13 +173,18 @@ def pretrainedModel(img_size, model_name, num_classes, retrain_model=False):
     cnn_out = keras.layers.Dropout(0.6)(cnn_out)
     cnn_out = keras.layers.Dropout(0.6)(cnn_out)
 
-    #cnn_out = keras.layers.Dense(num_classes, activation="softmax")(cnn_out)
     model = tf.keras.models.Model(model_cnn.input, cnn_out)
-    #model.compile(metrics=['accuracy'], loss=tf.keras.losses.SparseCategoricalCrossentropy(from_logits=True),optimizer=adam(learning_rate=1e-4))
-    
     return model
 
 def lstm_load(path:str, frames_norm:int, feature_length:int, num_classes:int) -> tf.keras.Model:
+    """
+    Load lstm from path
+
+    :param path: path to saved model
+    :param frames_norm: numer of expected frames per sample
+    :param feature_length: length of flattened features
+    :param num_classes: number of classes to be classified
+    """
     print("Load trained LSTM model from %s ..." % path)
     model = tf.keras.models.load_model(path)
     

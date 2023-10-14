@@ -18,9 +18,7 @@ import torch.utils.data.distributed
 from pose_hrnet import get_pose_net
 from torch.autograd import Variable
 from config import cfg
-from config import update_config
 
-import torchvision.transforms as transforms
 from tqdm import tqdm
 def main():
     parser = argparse.ArgumentParser()
@@ -62,8 +60,6 @@ def main():
             if success:
                 num_frame += 1
             else:
-#              print("Ignoring empty camera frame.")
-              # If loading a video, use 'break' instead of 'continue'.
               break
             image = cv2.resize(image, (384, 384))
             image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
@@ -79,6 +75,7 @@ def main():
                 image_flip[:, :, i] = image_flip[:, :, i] / stds[i]
             image = image.transpose((2, 0, 1))
             image_flip = image_flip.transpose((2, 0, 1))
+
 ################## clip videos ################################################
             if length < 60:
                 num_to_repeat = int(60 / length)
@@ -109,6 +106,8 @@ def main():
                 index += 1
                 frames.append(image)
                 frames_flip.append(image_flip)
+
+
 ################## feature extraction ################################################
           data = np.array(frames)
           input = Variable(torch.from_numpy(data).cuda())
@@ -120,16 +119,16 @@ def main():
           newout = out[:, selected_indices, :, :]
           newout = newout.view(1, -1, 24, 24)
           torch.save(newout, output_filename)
-          if opt.istrain:
-              data = np.array(frames_flip)
-              input = Variable(torch.from_numpy(data).cuda())
-              out = model(input)
-              out = m(out)
-              out = m(out)
-              newout = out[:, selected_indices, :, :]
-              newout = newout.view(1, -1, 24, 24)
-              output_filename = opt.feature_path + '/' + filename[lenstr : -4] + '_flip.pt'
-              torch.save(newout, output_filename)
+        #   if opt.istrain:
+        #       data = np.array(frames_flip)
+        #       input = Variable(torch.from_numpy(data).cuda())
+        #       out = model(input)
+        #       out = m(out)
+        #       out = m(out)
+        #       newout = out[:, selected_indices, :, :]
+        #       newout = newout.view(1, -1, 24, 24)
+        #       output_filename = opt.feature_path + '/' + filename[lenstr : -4] + '_flip.pt'
+        #       torch.save(newout, output_filename)
           if len(frames) != 60:
               break
           cap.release()

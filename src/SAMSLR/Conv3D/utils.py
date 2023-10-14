@@ -6,6 +6,8 @@ def convert_relu_to_swish(model):
     """
     Recursively replaces ReLU layers
     with Sigmoid Layers
+
+    :param model: model to replace ReLU layers with
     """
     for child_name, child in model.named_children():
         if isinstance(child, nn.ReLU):
@@ -15,6 +17,9 @@ def convert_relu_to_swish(model):
 
 class Swish(nn.Module):
     def __init__(self):
+        """
+        Initilaise swish layer
+        """
         super().__init__()
 
     def forward(self, x):
