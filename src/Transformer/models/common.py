@@ -139,7 +139,7 @@ class LongShortTermMemory(nn.Module):
         self.input_size = input_size
         self.hidden_size = hidden_size
         # sequence size needed?
-        self.lstm = LSTM(input_size, hidden_size, dropout=0.1, batch_first=True)
+        self.lstm = LSTM(input_size, hidden_size, batch_first=True)
 
     def forward(self, x):
         return self.lstm(x)

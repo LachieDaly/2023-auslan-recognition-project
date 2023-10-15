@@ -23,7 +23,6 @@ if __name__ == "__main__":
     parser.add_argument("--gradient_clip_val", type=int)
     parser.add_argument("--gpus", type=int)
     parser.add_argument("--accumulate_grad_batches", type=int)
-
     # Model specific
     parser = module.get_model_def().add_model_specific_args(parser)
 

@@ -10,10 +10,14 @@ import torchmetrics
 import torch 
 from torch.optim.lr_scheduler import StepLR
 
+# Video Transformer Based Models
 from .vtn_hcpf import VTNHCPF
 from .vtn_hc import VTNHC
 from .vtn_fb import VTNFB
 from .vtn_rastgoo import VTNR
+from .vtn_hcp import VTNHCP
+
+# LongShortTermMemory Based Models
 from .lstm_fb import LSTMFB
 from .lstm_hc import LSTMHC
 from .lstm_hcpf import LSTMHCPF
@@ -70,12 +74,13 @@ class Module(pl.LightningModule):
                                device=self.device)
             
         elif model == 'lstmfb':
+            print(self.hparams.dropout)
             self.model = LSTMFB(NUM_CLASSES,
                                 self.hparams.embed_size,
                                 self.hparams.sequence_length,
                                 self.hparams.cnn,
                                 self.hparams.freeze_layers,
-                                self.hparams.dropout,
+                                float(self.hparams.dropout),
                                 device=self.device)
             
         elif model == 'lstmhc':
@@ -107,18 +112,29 @@ class Module(pl.LightningModule):
 
         elif model == 'vtnrast':
             self.model = VTNR(NUM_CLASSES,
-                    self.hparams.num_heads,
-                    self.hparams.num_layers,
-                    self.hparams.embed_size,
-                    self.hparams.sequence_length,
-                    self.hparams.cnn,
-                    self.hparams.freeze_layers,
-                    self.hparams.dropout,
-                    device=self.device)
+                              self.hparams.num_heads,
+                                self.hparams.num_layers,
+                                self.hparams.embed_size,
+                                self.hparams.sequence_length,
+                                self.hparams.cnn,
+                                self.hparams.freeze_layers,
+                                self.hparams.dropout,
+                                device=self.device)
 
         elif model == 'lstmhcp':
             self.model = LSTMHCP(NUM_CLASSES,
-                            self.hparams.embed_size,
+                                 self.hparams.embed_size,
+                                 self.hparams.sequence_length,
+                                 self.hparams.cnn,
+                                 self.hparams.freeze_layers,
+                                 self.hparams.dropout,
+                                 device=self.device)
+
+        elif model == 'vtnhcp':
+            self.model = VTNHCP(NUM_CLASSES,
+                                self.hparams.num_heads,
+                                self.hparams.num_layers,
+                                self.hparams.embed_size,
                                 self.hparams.sequence_length,
                                 self.hparams.cnn,
                                 self.hparams.freeze_layers,

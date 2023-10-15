@@ -16,3 +16,7 @@ python src\transformer\train.py --log_dir ./src/Transformer/results --model lstm
 
 -- RASTGOO LSTM
 python src\transformer\train.py --log_dir ./src/Transformer/results --model lstmrast --dataset rastgoo --num_workers 8 --data_dir ./Data/ELAR/avi --sequence_length 16 --temporal_stride 2 --learning_rate 1e-4 --gradient_clip_val=1 --gpus 1 --cnn rn34 --num_layers 4 --num_heads 8 --batch_size 4 --accumulate_grad_batches 8
+
+
+-- TRAINING Stuffs
+python src\transformer\train.py --log_dir ./src/Transformer/results --model lstmfb --dataset fullbody --num_workers 8 --data_dir ./Data/ELAR/avi --sequence_length 16 --temporal_stride 1 --learning_rate 1e-4 --gradient_clip_val=1 --gpus 1 --cnn rn34 --num_layers 4 --num_heads 8 --batch_size 4 --accumulate_grad_batches 8 --dropout 0.1

@@ -22,7 +22,7 @@ class MMTensor(nn.Module):
     
 class LSTMFB(nn.Module):
     def __init__(self, num_classes=29, embed_size=512, sequence_length=16, cnn='rn34',
-                 freeze_layers=0, dropout=0, **kwargs):
+                 freeze_layers=0, dropout=0.1, **kwargs):
         """
         LSTMR intialises Long Short Term Memory Full Body model
 
@@ -36,7 +36,7 @@ class LSTMFB(nn.Module):
         :returns: Long Short Term Memory Full body network
         """
         super().__init__()
-
+        print(type(dropout))
         self.sequence_length = sequence_length
         self.embed_size = embed_size
         self.num_classes = num_classes
@@ -46,6 +46,7 @@ class LSTMFB(nn.Module):
 
         self.norm = MMTensor(-1)
         self.lstm = LongShortTermMemory(num_features, num_features, True)
+        self.dropout = nn.Dropout(dropout)
 
         self.classifier = LinearClassifier(num_features, num_classes, dropout)
 
@@ -55,7 +56,7 @@ class LSTMFB(nn.Module):
         zp = self.norm(z)
         zp = torch.nn.functional.relu(zp).clone()
         zp, (h_n, c_n) = self.lstm(zp)
-
+        zp = self.dropout(zp)
         # Select last output
         last_output = zp[:, -1, :]
 

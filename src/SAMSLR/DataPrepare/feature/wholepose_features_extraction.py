@@ -115,7 +115,8 @@ def main():
           m = torch.nn.MaxPool2d(3, stride=2, padding=1)
           out = m(out)
           out = m(out)
-          selected_indices = [0,71,77,85,89,5,6,7,8,9,10,91,93,95,96,99,100,103,104,107,108,111,112,114,116,117,120,121,124,125,128,129,132]
+          selected_indices = [0, 71, 77, 85, 89, 5, 6, 7, 8, 9, 10, 91, 93, 95, 96, 99, 100, 103, 104,
+                              107, 108, 111, 112, 114, 116, 117, 120, 121, 124, 125, 128, 129, 132]
           newout = out[:, selected_indices, :, :]
           newout = newout.view(1, -1, 24, 24)
           torch.save(newout, output_filename)
