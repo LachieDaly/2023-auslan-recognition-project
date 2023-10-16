@@ -21,9 +21,9 @@ def rgb_star_representation(frames):
         blue_range = frames[0:first_slice]
         green_range = frames[first_slice:second_slice]
         red_range = frames[second_slice:]
-        blue_matrix = calculate_star(blue_range,1)
-        green_matrix = calculate_star(green_range,2)
-        red_matrix = calculate_star(red_range,3)
+        blue_matrix = calculate_star(blue_range, 1)
+        green_matrix = calculate_star(green_range, 2)
+        red_matrix = calculate_star(red_range, 3)
         star_representation = combine_matrices(blue_matrix, green_matrix, red_matrix)
         return star_representation
 
@@ -36,14 +36,15 @@ def calculate_star(section, num):
     w = section[0].shape[1]
     # print(h, w)
     result = np.zeros((h, w), np.uint8)
-    for k in range(1,len(section)):
+    for k in range(1, len(section)):
+        print(section)
         current_frame_norm = np.linalg.norm(section[k], axis=2)
         previous_frame_norm = np.linalg.norm(section[k-1], axis=2)
         euclidean = np.absolute(previous_frame_norm - current_frame_norm)
         dot_product = np.vdot(section[k-1], section[k])
-        product_of_lengths = current_frame_norm*previous_frame_norm
-        angle = 1 - ((dot_product)/(product_of_lengths))
-        result = result + (1 - (angle/2))*euclidean    
+        product_of_lengths = current_frame_norm * previous_frame_norm
+        angle = 1 - ((dot_product) / (product_of_lengths))
+        result = result + (1 - (angle/2)) * euclidean
     return result
 
 frames = []

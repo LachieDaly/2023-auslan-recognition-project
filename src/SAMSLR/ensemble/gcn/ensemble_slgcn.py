@@ -7,23 +7,9 @@ from tqdm import tqdm
 label = open('Data/ELAR/sign/27/val_label.pkl', 'rb')
 label = np.array(pickle.load(label))
 
-# Our GCN results
-# r1 = open('src/SAMSLR/SL-GCN/work_dir/ensemble/gcn_ensembled.pkl', 'rb')
-# r1 = list(pickle.load(r1).items())
-
 # Our 3DCNN RGB results
-r1 = open('./src/SAMSLR/results/rgb_repeat_last_frame/results_epoch001_0.5989583333333334.pkl', 'rb')
+r1 = open('src/SAMSLR/SL-GCN/work_dir/ensemble/gcn_ensembled.pkl', 'rb')
 r1 = list(pickle.load(r1).items())
-
-# Our Optical Flow results
-# r3 = open('test_flow_color_w_val_finetune.pkl', 'rb')
-# r3 = list(pickle.load(r3).items())
-
-# Is this our SSTCN score
-# r4 = open('./src/SAMSLR/SSTCN/results/T_Pose_model_test.pkl', 'rb')
-# r4 = list(pickle.load(r4).items())
-# print(len(r4))
-
 
 # We can give give these results a bit more choice
 alpha = [1]  # gcn, rgb, flow_color, sstcn valeus, 
@@ -33,18 +19,15 @@ names = []
 preds = []
 scores = []
 mean = 0
-with open('predictions_rgb.csv', 'w') as f:
+with open('slgcn_predictions_rgb.csv', 'w') as f:
 
     for i in tqdm(range(len(label[0]))):
         name, l = label[:, i]
         names.append(name)
         name1, r11 = r1[i]
-        name2, r22 = r2[i]
-        # name3, r33 = r3[i]
-        name4, r44 = r4[i]
-        assert name == name1 == name2 #== name3
+        assert name == name1
         mean += r11.mean()
-        score = (r11*alpha[0] + r22*alpha[1] + r44*alpha[2]) / np.array(alpha).sum() # + r33*alpha[2] left out
+        score = r11*alpha[0] / np.array(alpha).sum()
         score = score.squeeze()
         rank_5 = score.argsort()[-5:]
         right_num_5 += int(int(l) in rank_5)

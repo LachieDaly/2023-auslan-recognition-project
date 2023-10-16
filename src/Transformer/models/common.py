@@ -168,7 +168,7 @@ class LinearClassifier(nn.Module):
 # Private if we could
 
 class Bottle(nn.Module):
-    # TODO Learn waht is happening here
+    # TODO Learn what is happening here
     """Perform the reshape routine before and after an operation."""
     def forward(self, input):
         if len(input.size()) <= 2:

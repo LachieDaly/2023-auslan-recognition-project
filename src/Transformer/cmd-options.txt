@@ -20,3 +20,110 @@ python src\transformer\train.py --log_dir ./src/Transformer/results --model lstm
 
 -- TRAINING Stuffs
 python src\transformer\train.py --log_dir ./src/Transformer/results --model lstmfb --dataset fullbody --num_workers 8 --data_dir ./Data/ELAR/avi --sequence_length 16 --temporal_stride 1 --learning_rate 1e-4 --gradient_clip_val=1 --gpus 1 --cnn rn34 --num_layers 4 --num_heads 8 --batch_size 4 --accumulate_grad_batches 8 --dropout 0.1
+
+USE THIS FOR ALL PREDICTIONS
+python .\src\transformer\predict.py --log_dir $LOG_DIR --model $MODEL --dataset $DATASET --num_workers 8 --data_dir $DATA_DIR --sequence_length $SEQUENCE --temporal_stride $TEMPORAL --learning_rate 1e-4 --gpus 1 --cnn rn34 --num_layers 4 --num_heads 8 --max_epochs 26 --checkpoint $CHECKPOINT_PATH --submission_template $PREDICTION_TEMPLATE --out $PREDICTIONS_CSV --batch_size 4
+
+# lstmfb stride 1
+$DATASET = "fullbody"
+$MODEL = "lstmfb"
+$TEMPORAL = 1
+$SEQUENCE = 16
+$PREDICTIONS_CSV = "lstmfb_stride_1_predictions.csv"
+$CHECKPOINT_PATH = ".\\src\\Transformer\\results\\lstmfb\\version_11\\checkpoints\\epoch=25-step=1872.ckpt"
+
+LSTMFB HAS BOTH STRIDES
+# lstmfb stride 2
+$DATASET = "fullbody"
+$MODEL = "lstmfb"
+$TEMPORAL = 2
+$SEQUENCE = 16
+$PREDICTIONS_CSV = "lstmfb_stride_2_predictions.csv"
+$CHECKPOINT_PATH = ".\\src\\Transformer\\results\\lstmfb\\version_12\\checkpoints\\epoch=55-step=4032.ckpt"
+
+# lstmhc stride 2
+$DATASET = "handcrop"
+$MODEL = "lstmhc"
+$TEMPORAL = 2
+$SEQUENCE = 16
+$PREDICTIONS_CSV = "lstmhc_stride_2_predictions.csv"
+$CHECKPOINT_PATH = ".\\src\\Transformer\\results\\lstmhc\\version_0\\checkpoints\\epoch=25-step=1872.ckpt"
+
+
+LSTMHCP HAS STRIDE 1
+
+# lstmhcp stride 1
+$DATASET = "handcrop_pose"
+$MODEL = "lstmhcp"
+$TEMPORAL = 1
+$SEQUENCE = 16
+$PREDICTIONS_CSV = "lstmhcp_stride_1_predictions.csv"
+$CHECKPOINT_PATH = ".\\src\\Transformer\\results\\lstmhcp\\version_0\\checkpoints\\epoch=32-step=2376.ckpt"
+
+LSTMHCPF HAS STRIDE 2
+
+# lstmhcpf stride 2
+$DATASET = "handcrop_poseflow"
+$MODEL = "lstmhcpf"
+$TEMPORAL = 2
+$SEQUENCE = 16
+$PREDICTIONS_CSV = "lstmhcpf_stride_2_predictions.csv"
+$CHECKPOINT_PATH = ".\\src\\Transformer\\results\\lstmhcpf\\version_1\\checkpoints\\epoch=37-step=2736.ckpt"
+
+LSTMRAST HAS BOTH STRIDES
+
+# lstmrast stride 2
+$DATASET = "rastgoo"
+$MODEL = "lstmrast"
+$TEMPORAL = 2
+$SEQUENCE = 16
+$PREDICTIONS_CSV = "lstmrast_stride_2_predictions.csv"
+$CHECKPOINT_PATH = ".\\src\\Transformer\\results\\lstmrast\\version_10\\checkpoints\\epoch=29-step=2160.ckpt"
+
+# lstmrast stride 1
+$DATASET = "rastgoo"
+$MODEL = "lstmrast"
+$TEMPORAL = 1
+$SEQUENCE = 16
+$PREDICTIONS_CSV = "lstmrast_stride_1_predictions.csv"
+$CHECKPOINT_PATH = ".\\src\\Transformer\\results\\lstmrast\\version_11\\checkpoints\\epoch=42-step=3096.ckpt"
+
+# vtnfb stride 2
+$DATASET = "fullbody"
+$MODEL = "vtnfb"
+$TEMPORAL = 2
+$SEQUENCE = 16
+$PREDICTIONS_CSV = "vtnfb_stride_2_predictions.csv"
+$CHECKPOINT_PATH = ".\\src\\Transformer\\results\\vtnfb\\version_2\\checkpoints\\epoch=22-step=1656.ckpt"
+
+# vtnhc stride 2
+$DATASET = "handcrop"
+$MODEL = "vtnhc"
+$TEMPORAL = 2
+$SEQUENCE = 16
+$PREDICTIONS_CSV = "vtnhc_stride_2_predictions.csv"
+$CHECKPOINT_PATH = ".\\src\\Transformer\\results\\vtnhc\\version_5\\checkpoints\\epoch=32-step=2376.ckpt"
+
+# vtnhcp stride 1
+$DATASET = "handcrop_pose"
+$MODEL = "vtnhcp"
+$TEMPORAL = 1
+$SEQUENCE = 16
+$PREDICTIONS_CSV = "vtnhcp_stride_1_predictions.csv"
+$CHECKPOINT_PATH = ".\\src\\Transformer\\results\\vtnhcp\\version_0\\checkpoints\\epoch=23-step=1728.ckpt"
+
+# vtnhcpf stride 1
+$DATASET = "handcrop_poseflow"
+$MODEL = "vtnhcpf"
+$TEMPORAL = 1
+$SEQUENCE = 16
+$PREDICTIONS_CSV = "vtnhcpf_stride_1_predictions.csv"
+$CHECKPOINT_PATH = ".\\src\\Transformer\\results\\vtnhcpf\\version_2\\checkpoints\\epoch=37-step=2736.ckpt"
+
+# vtnrast
+$DATASET = "rastgoo"
+$MODEL = "vtnrast"
+$TEMPORAL = 2
+$SEQUENCE = 16
+$PREDICTIONS_CSV = "vtnrast_stride_2_predictions.csv"
+$CHECKPOINT_PATH = ".\\src\\Transformer\\results\\vtnrast\\version_0\\checkpoints\\epoch=27-step=2016.ckpt"

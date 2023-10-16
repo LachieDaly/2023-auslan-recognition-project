@@ -8,7 +8,7 @@ class MMTensor(nn.Module):
         """
         Initialises normalisation layer
 
-        :param dim: dimesnion to unsqueeze and calculate mean and standard deviation across
+        :param dim: dimension to unsqueeze and calculate mean and standard deviation across
         :returns: normalisation layer
         """
         super().__init__()

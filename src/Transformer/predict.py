@@ -60,7 +60,7 @@ if __name__ == '__main__':
     # TODO let's add some confusion matrix stuff in here! 
     with open(args.submission_template) as stf:
         reader = csv.reader(stf)
-        with open(args.out, 'w') as of:
+        with open(args.out, 'w', newline='') as of:
             writer = csv.writer(of)
             for row in reader:
                 sample = row[0]

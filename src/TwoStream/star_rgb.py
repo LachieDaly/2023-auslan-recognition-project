@@ -45,20 +45,22 @@ def calculate_star(section, num):
     w = section[0].shape[1]
     # print(h, w)
     result = np.zeros((h, w), np.uint8)
-    for k in range(1,len(section)):
+    for k in range(1, len(section)):
         current_frame_norm = np.linalg.norm(section[k], axis=2)
         previous_frame_norm = np.linalg.norm(section[k-1], axis=2)
+        # Get distance
         euclidean = np.absolute(previous_frame_norm - current_frame_norm)
+        # Get Angle
         multiplied = np.multiply(section[k-1], section[k])
         dot_product = np.sum(multiplied, axis=2)
         product_of_lengths = current_frame_norm*previous_frame_norm
         angle = 1 - ((dot_product)/(product_of_lengths))
-        result = result + (1 - (angle/2))*euclidean    
+        result = result + (1 - (angle / 2)) * euclidean
     return result
 
 
 def combine_matrices(blue, green, red):
-    image = np.stack((blue, green, red), axis=2)    
+    image = np.stack((blue, green, red), axis=2)
     return image
 
 
