@@ -8,25 +8,25 @@ label = open('Data/ELAR/sign/27/val_label.pkl', 'rb')
 label = np.array(pickle.load(label))
 
 # Our GCN results
-# r1 = open('src/SAMSLR/SL-GCN/work_dir/ensemble/gcn_ensembled.pkl', 'rb')
-# r1 = list(pickle.load(r1).items())
+r1 = open('src/SAMSLR/SL-GCN/work_dir/ensemble/gcn_ensembled.pkl', 'rb')
+r1 = list(pickle.load(r1).items())
 
 # Our 3DCNN RGB results
-r1 = open('./src/SAMSLR/results/rgb_repeat_last_frame/results_epoch001_0.5989583333333334.pkl', 'rb')
-r1 = list(pickle.load(r1).items())
+r2 = open('./src/SAMSLR/results/rgb_repeat_last_frame/results_epoch001_0.5989583333333334.pkl', 'rb')
+r2 = list(pickle.load(r2).items())
 
 # Our Optical Flow results
 # r3 = open('test_flow_color_w_val_finetune.pkl', 'rb')
 # r3 = list(pickle.load(r3).items())
 
 # Is this our SSTCN score
-# r4 = open('./src/SAMSLR/SSTCN/results/T_Pose_model_test.pkl', 'rb')
-# r4 = list(pickle.load(r4).items())
-# print(len(r4))
+r4 = open('./src/SAMSLR/SSTCN/results/T_Pose_model_test.pkl', 'rb')
+r4 = list(pickle.load(r4).items())
+print(len(r4))
 
 
 # We can give give these results a bit more choice
-alpha = [1]  # gcn, rgb, flow_color, sstcn valeus, 
+alpha = [0.9,0.6,0.9]  # gcn, rgb, flow_color, sstcn valeus, 
 
 right_num = total_num = right_num_5 = 0
 names = []

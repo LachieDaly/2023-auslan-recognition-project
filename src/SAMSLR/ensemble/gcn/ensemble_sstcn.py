@@ -7,7 +7,6 @@ from tqdm import tqdm
 label = open('Data/ELAR/sign/27/val_label.pkl', 'rb')
 label = np.array(pickle.load(label))
 
-# Our 3DCNN RGB results
 r1 = open('./src/SAMSLR/SSTCN/results/T_Pose_model_test.pkl', 'rb')
 r1 = list(pickle.load(r1).items())
 

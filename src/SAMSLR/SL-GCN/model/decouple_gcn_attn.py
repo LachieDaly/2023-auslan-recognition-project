@@ -342,7 +342,7 @@ class Model(nn.Module):
         x = self.l4(x, 1.0)
         x = self.l5(x, 1.0)
         x = self.l6(x, 1.0)
-        # These particular layers definiteyl are definitely dropping values
+        # These particular layers definitely are definitely dropping values
         x = self.l7(x, keep_prob)
         x = self.l8(x, keep_prob)
         x = self.l9(x, keep_prob)

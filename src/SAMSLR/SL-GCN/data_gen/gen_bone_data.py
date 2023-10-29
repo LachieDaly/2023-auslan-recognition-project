@@ -26,12 +26,16 @@ for dataset in datasets:
     for set in sets:
         print(dataset, set)
         data = np.load('./Data/ELAR/{}/{}_data_joint.npy'.format(dataset, set))
-        # N frame number?
-        # C channel?
-        # T
-        # V
-        # M
+        # N Samples
+        # C  positions, y positions, confidences
+        # T  frame number
+        # V  joint number
+        # M  joint dimension
         N, C, T, V, M = data.shape
+        # print(N, C, T, V, M)
+        # print(data[0][0][0][0])
+        # print(data[0][1][0][0])
+        # print(data[0][2][0][0])
         """Changing this will change it in our memory file as well"""
         fp_sp = open_memmap(
             './Data/ELAR/{}/{}_data_bone.npy'.format(dataset, set),

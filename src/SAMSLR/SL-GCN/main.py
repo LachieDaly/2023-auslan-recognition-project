@@ -14,11 +14,9 @@ import torch.optim as optim
 from torch.autograd import Variable
 from tqdm import tqdm
 import shutil
-from torch.optim.lr_scheduler import ReduceLROnPlateau, MultiStepLR
+from torch.optim.lr_scheduler import ReduceLROnPlateau
 import random
 import inspect
-import torch.backends.cudnn as cudnn
-import torch.nn.functional as F
 
 # class LabelSmoothingCrossEntropy(nn.Module):
 #     def __init__(self):

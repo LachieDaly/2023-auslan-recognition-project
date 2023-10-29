@@ -60,6 +60,7 @@ class LSTMHCPF(nn.Module):
         b, t, x, c, h, w = rgb_clip.size()
         rgb_clip = rgb_clip.view(b, t * x, c, h, w)
         z = self.feature_extractor(rgb_clip)
+        
         # reshape back to extract features of both wrist crops as one feature vector
         z = z.view(b, t, -1)
 
