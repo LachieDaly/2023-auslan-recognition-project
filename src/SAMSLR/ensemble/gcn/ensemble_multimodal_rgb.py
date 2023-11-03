@@ -12,9 +12,11 @@ r1 = open('src/SAMSLR/SL-GCN/work_dir/ensemble/gcn_ensembled.pkl', 'rb')
 r1 = list(pickle.load(r1).items())
 
 # Our 3DCNN RGB results
-r2 = open('./src/SAMSLR/results/rgb_repeat_last_frame/results_epoch001_0.5989583333333334.pkl', 'rb')
+# r2 = open('./src/SAMSLR/results/rgb_repeat_last_frame/results_epoch001_0.5989583333333334.pkl', 'rb')
+# r2 = list(pickle.load(r2).items())
+# Our VTN PF results instead?
+r2 = open('./src/Transformer/results/vtnhcpf/results_epoch033_85.pkl', 'rb')
 r2 = list(pickle.load(r2).items())
-
 # Our Optical Flow results
 # r3 = open('test_flow_color_w_val_finetune.pkl', 'rb')
 # r3 = list(pickle.load(r3).items())
@@ -26,14 +28,14 @@ print(len(r4))
 
 
 # We can give give these results a bit more choice
-alpha = [0.9,0.6,0.9]  # gcn, rgb, flow_color, sstcn valeus, 
+alpha = [1,1,1]  # gcn, rgb, flow_color, sstcn valeus, 
 
 right_num = total_num = right_num_5 = 0
 names = []
 preds = []
 scores = []
 mean = 0
-with open('predictions_rgb.csv', 'w') as f:
+with open('predictions_poseflow_ensemble.csv', 'w') as f:
 
     for i in tqdm(range(len(label[0]))):
         name, l = label[:, i]

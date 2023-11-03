@@ -37,6 +37,7 @@ def collect_samples(has_labels, root_path, job_path, sequence_length,
                     while len(frame_indices) < sequence_length:
                         frame_indices.append(frame_indices[-1])
                     samples.append({
+                        'sample_name': row[0],
                         'path': video_file,
                         'label': int(row[1]),
                         'frames': frame_indices

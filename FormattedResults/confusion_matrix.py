@@ -26,7 +26,7 @@ def save_classification_report(y_true, y_pred, experiment_name):
 
 
 if __name__ == "__main__":
-    prediction_labels_csv = "./FormattedResults/3dcnn/3dcnn_predictions.csv"
+    prediction_labels_csv = "./FormattedResults/poseflow_ensemble/predictions_poseflow_ensemble.csv"
     true_labels_csv = "./FormattedResults/predictions.csv"
 
     experiment_name = prediction_labels_csv.split("/")[-1].replace(".csv", "")

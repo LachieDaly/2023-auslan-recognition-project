@@ -2,6 +2,8 @@
 import csv
 import importlib
 from argparse import ArgumentParser
+import pickle
+import numpy as np
 
 import lightning.pytorch as pl
 import torch
@@ -43,7 +45,7 @@ if __name__ == '__main__':
     # Let us predict
 
     submission = dict()
-
+    score_frag = []
     dataloader = dm.val_dataloader(True)
     with torch.no_grad():
         for i, batch in enumerate(dataloader):
@@ -52,7 +54,9 @@ if __name__ == '__main__':
                 logits = model([e.to(device) for e in x]).cpu()
             else:
                 logits = model(x.to(device)).cpu()
-
+            
+            score_frag.append(logits.numpy())
+            score = np.concatenate(score_frag)
             predictions = torch.argmax(logits, dim=1)
             for j in range(logits.size(0)):
                 submission[paths[j]] = predictions[j].item()
@@ -67,6 +71,10 @@ if __name__ == '__main__':
                 print(f'Predicting {sample}', end=' ')
                 print(f'as {submission[sample]}')
                 writer.writerow([sample, submission[sample]])
+    
+    with open('./src/Transformer/results/{}/results_epoch{:03d}_{}.pkl'.format("vtnhcpf", 33, 85), 'wb') as f:
+        score_dict = dict(zip([d["sample_name"] for d in dataloader.dataset.samples], score))
+        pickle.dump(score_dict, f)
     
     print(f'Wrote submission to {args.out}')
 

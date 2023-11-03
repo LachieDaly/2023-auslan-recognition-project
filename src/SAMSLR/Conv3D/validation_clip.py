@@ -35,6 +35,7 @@ def val_epoch(model, criterion, dataloader, device, epoch, logger, writer, phase
                 #     outputs = outputs[0]
             outputs = torch.mean(torch.stack(outputs_clips, dim=0), dim=0)
             if phase == 'Test':
+                print(outputs.data.cpu().numpy().shape)
                 score_frag.append(outputs.data.cpu().numpy())
             # compute the loss
             loss = criterion(outputs, labels.squeeze())

@@ -1,24 +1,38 @@
 if __name__ == '__main__':
     import os
-    import sys
     from datetime import datetime
     import logging
     import torch
     import torch.nn as nn
     import torch.nn.functional as F
     import torch.optim as optim
-    from torch.utils.data import DataLoader, random_split
+    from torch.utils.data import DataLoader
     from torch.utils.tensorboard import SummaryWriter
     import torchvision.transforms as transforms
     from models.Conv3D import r2plus1d_18
     from dataset_sign_clip import Sign_Isolated
     from train import train_epoch
     from validation_clip import val_epoch
-    from collections import OrderedDict
+
+    class LabelSmoothingCrossEntropy(nn.Module):
+        """
+        Label Smoothing supposedly improved the validation accuracy of 
+        the SAM-SLR model
+        """
+        def __init__(self):
+            super(LabelSmoothingCrossEntropy, self).__init__()
+        def forward(self, x, target, smoothing=0.1):
+            confidence = 1. - smoothing
+            logprobs = F.log_softmax(x, dim=-1)
+            nll_loss = -logprobs.gather(dim=-1, index=target.unsqueeze(1))
+            nll_loss = nll_loss.squeeze(1)
+            smooth_loss = -logprobs.mean(dim=-1)
+            loss = confidence * nll_loss + smoothing * smooth_loss
+            return loss.mean()
 
     # Path setting
     # Path setting
-    exp_name = 'rgb_final_last_frame_finetune'
+    exp_name = 'rgb_final_middle_finetune'
     data_path = "./Data/ELAR/sam_frames_crop/train"
     data_path2 = "./Data/ELAR/sam_frames_crop/train"
     label_train_path = "./Data/ELAR/avi/train_val_labels.csv"
@@ -38,7 +52,6 @@ if __name__ == '__main__':
     writer = SummaryWriter(sum_path)
 
     # Use specific gpus
-    # os.environ["CUDA_VISIBLE_DEVICES"]="4,5,6,7"
     os.environ["CUDA_VISIBLE_DEVICES"]="0"
     # Device setting
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
@@ -47,7 +60,7 @@ if __name__ == '__main__':
     num_classes = 226 
     epochs = 100
     batch_size = 4
-    learning_rate = 1e-4#1e-3 Train 1e-4 Finetune
+    learning_rate = 1e-3#1e-3 Train 1e-4 Finetune
     log_interval = 80
     sample_size = 128
     sample_duration = 16
@@ -66,32 +79,30 @@ if __name__ == '__main__':
                                     transforms.Normalize(mean=[0.5], std=[0.5])])
     train_set = Sign_Isolated(data_path=data_path, label_path=label_train_path, frames=sample_duration,
         num_classes=num_classes, train=True, transform=transform)
+    
     val_set = Sign_Isolated(data_path=data_path2, label_path=label_val_path, frames=sample_duration,
         num_classes=num_classes, train=False, transform=transform)
-    logger.info("Dataset samples: {}".format(len(train_set)+len(val_set)))
-    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=16, pin_memory=True)
-    val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=16, pin_memory=True)
+    
+    logger.info("Dataset samples: {}".format(len(train_set) + len(val_set)))
+
+    train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=8, pin_memory=True)
+
+    val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=False, num_workers=8, pin_memory=True)
     # Create model
     model = r2plus1d_18(pretrained=False, num_classes=29)
     # load pretrained
-    checkpoint = torch.load('./src/SAMSLR/checkpoints/rgb_final_last_frame_finetune/sign_resnet2d+1_epoch063.pth')
+    checkpoint = torch.load('./src/SAMSLR/checkpoints/rgb_repeat_last_frame/sign_resnet2d+1_epoch100.pth')
     for key in checkpoint:
         print(key)
 
-    # new_state_dict = OrderedDict()
-    # for k, v in checkpoint.items():
-    #     name = k[7:] # remove 'module.'
-    #     new_state_dict[name]=v
     model.load_state_dict(checkpoint)
-    # if phase == 'Train':
-    #     model.fc1 = nn.Linear(model.fc1.in_features, num_classes)
     print(model)
 
 
     model = model.to(device)
     # Run the model parallelly
     # Create loss criterion & optimizer
-    criterion = nn.CrossEntropyLoss()
+    criterion = LabelSmoothingCrossEntropy()
     optimizer = optim.Adam(model.parameters(), lr=learning_rate)
     scheduler = torch.optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.1, patience=10, threshold=0.0001)
 

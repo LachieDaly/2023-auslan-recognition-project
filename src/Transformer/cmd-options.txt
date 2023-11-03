@@ -2,7 +2,7 @@
  $DATA_DIR = ".\\Data\\ELAR\\avi"
  $DATASET = "rastgoo"  
  $PREDICTION_TEMPLATE = ".\\Data\\ELAR\\avi\\predictions_template.csv"
- $CHECKPOINT_PATH = ".\\src\\Transformer\\results\\vtnfb\\version_2\\checkpoints\\epoch=22-step=1656.ckpt"
+ $CHECKPOINT_PATH = ".\\src\\Transformer\\results\\vtnhcpf\\version_2\\checkpoints\\epoch=37-step=2736.ckpt"
  $LOG_DIR = ".\\src\\Transformer\\results"
 
 

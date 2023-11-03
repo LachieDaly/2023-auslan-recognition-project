@@ -45,33 +45,67 @@ class Sign_Isolated(Dataset):
         otherwise gets the entire video and if the video is too short
         the final frame is repeated
         """
-        if video_length > sample_duration:
-            random_start = random.randint(0, video_length - sample_duration)
-            frame_indices = np.arange(random_start, random_start + sample_duration) + 1
-        else:
-            frame_indices = np.arange(video_length)
-            while frame_indices.shape[0] < sample_duration:
-                # seem to repeat 
-                # frame_indices = np.concatenate((frame_indices, np.arange(video_length)), axis=0)
-                frame_indices = np.concatenate((frame_indices, np.array([frame_indices[-1]])), axis=0)
-            frame_indices = frame_indices[:sample_duration] + 1
+        frame_start = (video_length - sample_duration) // (2)
+        frame_end = frame_start + sample_duration
+        if frame_start < 0:
+            frame_start = 0
+
+        if frame_end > video_length:
+            frame_end = video_length
+        
+        frame_indices = np.arange(frame_start, frame_end, 1)
+        while len(frame_indices) < sample_duration:
+            frame_indices = np.append(frame_indices, frame_indices[-1])
+        # if video_length > sample_duration:
+        #     random_start = random.randint(0, video_length - sample_duration)
+        #     frame_indices = np.arange(random_start, random_start + sample_duration) + 1
+        # else:
+        #     frame_indices = np.arange(video_length)
+        #     while frame_indices.shape[0] < sample_duration:
+        #         # seem to repeat 
+        #         # frame_indices = np.concatenate((frame_indices, np.arange(video_length)), axis=0)
+        #         frame_indices = np.concatenate((frame_indices, np.array([frame_indices[-1]])), axis=0)
+        #     frame_indices = frame_indices[:sample_duration] + 1
         assert frame_indices.shape[0] == sample_duration
-        return frame_indices
+        return frame_indices + 1
 
     def frame_indices_transform_test(self, video_length, sample_duration, clip_no=0):
-        if video_length > sample_duration:
-            start = (video_length - sample_duration) // (self.test_clips - 1) * clip_no
-            frame_indices = np.arange(start, start + sample_duration) + 1
-        elif video_length == sample_duration:
-            frame_indices = np.arange(sample_duration) + 1
-        else:
-            frame_indices = np.arange(video_length)
-            while frame_indices.shape[0] < sample_duration:
-                # frame_indices = np.concatenate((frame_indices, np.arange(video_length)), axis=0)
-                frame_indices = np.concatenate((frame_indices, np.array([frame_indices[-1]])), axis=0)
-            frame_indices = frame_indices[:sample_duration] + 1
+        frame_start = (video_length - sample_duration) // (2)
+        frame_end = frame_start + sample_duration
+        if frame_start < 0:
+            frame_start = 0
 
-        return frame_indices
+        if frame_end > video_length:
+            frame_end = video_length
+        
+        frame_indices = np.arange(frame_start, frame_end, 1)
+        while len(frame_indices) < sample_duration:
+            frame_indices = np.append(frame_indices, frame_indices[-1])
+        # if video_length > sample_duration:
+        #     random_start = random.randint(0, video_length - sample_duration)
+        #     frame_indices = np.arange(random_start, random_start + sample_duration) + 1
+        # else:
+        #     frame_indices = np.arange(video_length)
+        #     while frame_indices.shape[0] < sample_duration:
+        #         # seem to repeat 
+        #         # frame_indices = np.concatenate((frame_indices, np.arange(video_length)), axis=0)
+        #         frame_indices = np.concatenate((frame_indices, np.array([frame_indices[-1]])), axis=0)
+        #     frame_indices = frame_indices[:sample_duration] + 1
+        assert frame_indices.shape[0] == sample_duration
+        return frame_indices + 1
+        # if video_length > sample_duration:
+        #     start = (video_length - sample_duration) // (self.test_clips - 1) * clip_no
+        #     frame_indices = np.arange(start, start + sample_duration) + 1
+        # elif video_length == sample_duration:
+        #     frame_indices = np.arange(sample_duration) + 1
+        # else:
+        #     frame_indices = np.arange(video_length)
+        #     while frame_indices.shape[0] < sample_duration:
+        #         # frame_indices = np.concatenate((frame_indices, np.arange(video_length)), axis=0)
+        #         frame_indices = np.concatenate((frame_indices, np.array([frame_indices[-1]])), axis=0)
+        #     frame_indices = frame_indices[:sample_duration] + 1
+
+        # return frame_indices
 
     def random_crop_paras(self, input_size, output_size):
         """
@@ -89,7 +123,7 @@ class Sign_Isolated(Dataset):
         # assert len(os.listdir(folder_path)) >= self.frames, "Too few images in your data folder: " + str(folder_path)
         images = []
         if self.train:
-            index_list = self.frame_indices_tranform(len(os.listdir(folder_path)), self.frames)
+            index_list = self.frame_indices_transform(len(os.listdir(folder_path)), self.frames)
             flip_rand = random.random()
             angle = (random.random() - 0.5) * 10
             crop_box = self.random_crop_paras(256, 224)
