@@ -10,7 +10,6 @@ from tensorflow import keras
 from keras.preprocessing.image import ImageDataGenerator
 from keras.utils import image_dataset_from_directory
 from keras.optimizers import Adam as adam
-from keras.applications.mobilenet import preprocess_input
 from keras.callbacks import EarlyStopping, CSVLogger
 from keras.models import Sequential
 from keras import layers
@@ -153,11 +152,12 @@ def pretrained_model(img_size, model_name, retrain=False):
     print("Input image")
     print(input_img)
     if model_name == 'mobileNet':
-        input_img = preprocess_input(input_img)
+        input_img = keras.applications.mobilenet.preprocess_input(input_img)
         model_cnn = tf.keras.applications.MobileNet(weights="imagenet", include_top=False, input_tensor=input_img)
     elif model_name == 'InceptionV3':
         model_cnn = tf.keras.applications.InceptionV3(weights="imagenet", include_top=False, input_shape=(256, 256, 3))
     elif model_name == 'ResNet':
+        input_img = keras.applications.resnet50.preprocess_input(input_img)
         model_cnn = tf.keras.applications.ResNet50(weights="imagenet", include_top=False, input_tensor=input_img)
     if retrain:
         for layer in model_cnn.layers[:-4]:
@@ -208,6 +208,7 @@ def main(model_name, retrain, train_path, test_path, main_exp_folder, model_dest
     print(main_exp_folder)
     print('------------------------------------------------------------------------')
     datagen_train = ImageDataGenerator(validation_split=0.20, rotation_range=10, zoom_range=0.2, horizontal_flip=True)
+    datagen_val = ImageDataGenerator(validation_split=0.20, seed)
 
     if data_format == 'csv':
         # Generate testing data from csv
@@ -302,18 +303,18 @@ def main(model_name, retrain, train_path, test_path, main_exp_folder, model_dest
     print_confusion_matrix(y_test, class_limit, y_pred, main_exp_folder)
 
 """Configure our models"""
-model_name = 'mobileNet'
+model_name = 'ResNet'
 input_size = 224
 retrainModel = False
-dataFormat = 'folder' # 'csv' for csv files or 'folder' to read from folders
+dataFormat = 'csv' # 'csv' for csv files or 'folder' to read from folders
 
 """Configure the rest of our settings"""
 train_path = "../../data/elar/star/train" #contains train signs after forward fusion
-main_exp_folder = './results/elar/star/mobilenet'
+main_exp_folder = './results/elar/star/resnet3'
 model_dest = os.path.join(main_exp_folder, 'Last.h5')
 class_limit = 29
 load_model = False
-savedModel='./results/elar/star/mobilenet/model-best.h5'
+savedModel = './results/elar/star/resnet3/model-best.h5'
 
 main(model_name, retrainModel, train_path, None, main_exp_folder, model_dest, class_limit,
       input_size, dataFormat, load_model, savedModel)

@@ -120,8 +120,9 @@ def video_to_frames(video_path:str, resize_min_dim:int) -> np.array:
 
         if resize_min_dim != None:
             frame_resized = resize_image(frame, resize_min_dim)
-
-        frame_list.append(frame_resized)
+            frame_list.append(frame_resized)
+        else:
+            frame_list.append(frame)
 
     return np.array(frame_list)
 

@@ -238,8 +238,21 @@ class Processor():
             self.arg.device) is list else self.arg.device
         self.output_device = output_device
         Model = import_class(self.arg.model)
+
         shutil.copy2(inspect.getfile(Model), self.arg.work_dir)
         self.model = Model(**self.arg.model_args).cuda(output_device)
+        print(self.model.describe())
+        print(self.model)
+        param_size = 0
+        for param in self.model.parameters():
+            param_size += param.nelement() * param.element_size()
+            print(param)
+        buffer_size = 0
+        for buffer in self.model.buffers():
+            buffer_size += buffer.nelement() * buffer.element_size()
+
+        size_all_mb = (param_size + buffer_size) / 1024**2
+        print('model size: {:.3f}MB'.format(size_all_mb))
         # print(self.model)
         self.loss = nn.CrossEntropyLoss().cuda(output_device)
         # self.loss = LabelSmoothingCrossEntropy().cuda(output_device)

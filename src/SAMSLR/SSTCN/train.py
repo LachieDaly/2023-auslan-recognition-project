@@ -39,6 +39,17 @@ if __name__ == "__main__":
     cls_criterion = LabelSmoothingCrossEntropy().cuda()
     # Define network
     model = T_Pose_model(frames_number=60,joints_number=33, n_classes=29)
+    print(model)
+    param_size = 0
+    for param in model.parameters():
+        param_size += param.nelement() * param.element_size()
+        print(param)
+    buffer_size = 0
+    for buffer in model.buffers():
+        buffer_size += buffer.nelement() * buffer.element_size()
+
+    size_all_mb = (param_size + buffer_size) / 1024**2
+    print('model size: {:.3f}MB'.format(size_all_mb))
 
     if opt.checkpoint_model:
         model.load_state_dict(torch.load(opt.checkpoint_model,map_location='cuda:0'))

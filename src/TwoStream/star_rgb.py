@@ -4,10 +4,9 @@ import glob
 import numpy as np
 
 def star_rbg_generation():
-    # perform forward, backward, and concatenated fusion of the frames for ISA64 dataset where structure is [signer-->sign-->samples]
-    home_source_folder = os.path.normpath('../dataset/elar/images/')
+    home_source_folder = os.path.normpath('../../Data/ELAR/better_images/')
     signs = glob.glob(home_source_folder + '/*/*/*')
-    target_path_star = os.path.normpath('../dataset/elar/star/')
+    target_path_star = os.path.normpath('../../Data/ELAR/better_star/')
 
     for sign in signs:
         # extract frames
@@ -26,6 +25,7 @@ def star_rbg_generation():
                 frame_array.append(cv2.imread(key_frame))
             
             frame_number = len(frame_array)
+            if (frame_number < 3): continue
             section_number = frame_number // 3
             extra_frames = frame_number % 3
             first_slice = section_number

@@ -185,6 +185,7 @@ class ElarDataset(Dataset):
             left_hand_ymin = max(0, int(left_hand_center_y - shoulder_dist // 2))
             left_hand_ymax = min(frame.size(0), int(left_hand_center_y + shoulder_dist // 2))
 
+            
             if not np.any(left_wrist) or not np.any(
                     left_elbow) or left_hand_ymax - left_hand_ymin <= 0 or left_hand_xmax - left_hand_xmin <= 0:
                 # Wrist or elbow not found -> use entire frame then
@@ -212,6 +213,7 @@ class ElarDataset(Dataset):
             else:
                 right_hand_crop = frame[right_hand_ymin:right_hand_ymax, right_hand_xmin:right_hand_xmax, :]
             right_hand_crop = self.transform(right_hand_crop.numpy())
+
 
             crops = torch.stack((left_hand_crop, right_hand_crop), dim=0)
 

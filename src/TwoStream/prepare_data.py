@@ -13,7 +13,7 @@ This pipeline
 
 import os
 from frame import video_dir_to_frames_dir
-from feature import load_feature_extractor, predict_features
+# from feature import load_feature_extractor, predict_features
 
 def start_pipeline(video_set, video_dir, feature, image_dir, image_feature_dir):
     """
@@ -26,13 +26,13 @@ def start_pipeline(video_set, video_dir, feature, image_dir, image_feature_dir):
     :param image_feature_dir: directory to store frame features
     """
     # Extract frames from videos
-    video_dir_to_frames_dir(video_dir, image_dir, frames_norm=video_set["frames_norm"], 
-                            resize_min_dim=video_set["min_dim"], crop_shape=feature["input_shape"][0:2])
+    video_dir_to_frames_dir(video_dir, image_dir, frames_norm=None, 
+                            resize_min_dim=None, crop_shape=None)
 
     # Load pretrained MobileNet model without top layer
-    model = load_feature_extractor(feature)
+    # model = load_feature_extractor(feature)
 
-    predict_features(image_dir + "/train", image_feature_dir + "/train", model, video_set["frames_norm"])
+    # predict_features(image_dir + "/train", image_feature_dir + "/train", model, video_set["frames_norm"])
 
 
 # dataset
@@ -54,8 +54,8 @@ feature = {
     "output_shape": (1, 1, 1024)
 }
 
-video_dir = '../dataset/elar/videos/' # path of video files
-image_dir = '../dataset/elar/images/' # path of image files
+video_dir = '../../Data/ELAR/videos/' # path of video files
+image_dir = '../../Data/ELAR/better_images/' # path of image files
 
 image_feature_dir = '../dataset/elar/features/mobilenet_temp/'
 
