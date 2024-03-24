@@ -1,4 +1,4 @@
- $LOG_DIR = ".\\results"
+
  $DATA_DIR = ".\\Data\\ELAR\\avi"
  $DATASET = "rastgoo"  
  $PREDICTION_TEMPLATE = ".\\Data\\ELAR\\avi\\predictions_template.csv"

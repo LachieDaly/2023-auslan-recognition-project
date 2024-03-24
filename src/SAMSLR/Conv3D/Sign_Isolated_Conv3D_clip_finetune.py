@@ -77,11 +77,14 @@ if __name__ == '__main__':
     transform = transforms.Compose([transforms.Resize([sample_size, sample_size]),
                                     transforms.ToTensor(),
                                     transforms.Normalize(mean=[0.5], std=[0.5])])
-    train_set = Sign_Isolated(data_path=data_path, label_path=label_train_path, frames=sample_duration,
-        num_classes=num_classes, train=True, transform=transform)
     
-    val_set = Sign_Isolated(data_path=data_path2, label_path=label_val_path, frames=sample_duration,
-        num_classes=num_classes, train=False, transform=transform)
+    train_set = Sign_Isolated(data_path=data_path, label_path=label_train_path, 
+                              frames=sample_duration, num_classes=num_classes, 
+                              train=True, transform=transform)
+    
+    val_set = Sign_Isolated(data_path=data_path2, label_path=label_val_path, 
+                            frames=sample_duration, num_classes=num_classes, 
+                            train=False, transform=transform)
     
     logger.info("Dataset samples: {}".format(len(train_set) + len(val_set)))
 
@@ -97,7 +100,6 @@ if __name__ == '__main__':
 
     model.load_state_dict(checkpoint)
     print(model)
-
 
     model = model.to(device)
     # Run the model parallelly

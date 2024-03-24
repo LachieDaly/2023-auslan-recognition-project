@@ -207,8 +207,8 @@ def main(model_name, retrain, train_path, test_path, main_exp_folder, model_dest
     print('---------------------------------------START----------------------------')
     print(main_exp_folder)
     print('------------------------------------------------------------------------')
-    datagen_train = ImageDataGenerator(validation_split=0.20, rotation_range=10, zoom_range=0.2, horizontal_flip=True)
-    datagen_val = ImageDataGenerator(validation_split=0.20, seed)
+    datagen_train = ImageDataGenerator(rotation_range=10, zoom_range=0.2, horizontal_flip=True)
+    datagen_val = ImageDataGenerator(seed)
 
     if data_format == 'csv':
         # Generate testing data from csv

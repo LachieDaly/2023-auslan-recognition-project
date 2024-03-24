@@ -241,7 +241,6 @@ class Processor():
 
         shutil.copy2(inspect.getfile(Model), self.arg.work_dir)
         self.model = Model(**self.arg.model_args).cuda(output_device)
-        print(self.model.describe())
         print(self.model)
         param_size = 0
         for param in self.model.parameters():
